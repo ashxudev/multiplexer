@@ -21,6 +21,7 @@ CLAUDE.md
 agents.md
 AGENTS.md
 .claude/
+*plan*.md
 
 # Environment
 .env
