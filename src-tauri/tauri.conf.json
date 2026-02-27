@@ -1,0 +1,35 @@
+{
+  "productName": "Multiplexer",
+  "version": "0.1.0",
+  "identifier": "com.multiplexer.app",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "security": {
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["$HOME/**"]
+      },
+      "csp": "default-src 'self' 'unsafe-inline' asset: https://asset.localhost blob: data:; script-src 'self' 'unsafe-eval' blob:; img-src 'self' asset: https://asset.localhost blob: data:; connect-src ipc: http://ipc.localhost https://lab.boltz.bio"
+    },
+    "windows": [
+      {
+        "title": "Multiplexer",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 960,
+        "minHeight": 600
+      }
+    ]
+  },
+  "plugins": {
+    "notification": {},
+    "shell": {
+      "open": true
+    }
+  }
+}

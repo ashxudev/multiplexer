@@ -1,0 +1,42 @@
+{
+  "name": "multiplexer",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@rdkit/rdkit": "2025.3.4-1.0.0",
+    "@tailwindcss/vite": "^4.2.1",
+    "@tanstack/react-table": "^8.21.3",
+    "@tanstack/react-virtual": "^3.13.19",
+    "@tauri-apps/api": "^2.10.1",
+    "@tauri-apps/cli": "^2.10.0",
+    "@tauri-apps/plugin-notification": "^2.3.3",
+    "@tauri-apps/plugin-shell": "^2.3.5",
+    "@vitejs/plugin-react": "^5.1.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.575.0",
+    "molstar": "^5.6.1",
+    "papaparse": "^5.5.3",
+    "radix-ui": "^1.4.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tailwind-merge": "^3.5.0",
+    "tailwindcss": "^4.2.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "zustand": "^5.0.11"
+  },
+  "devDependencies": {
+    "@types/papaparse": "^5.5.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "sass": "^1.97.3"
+  }
+}

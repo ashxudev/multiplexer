@@ -1,0 +1,17 @@
+{
+  "identifier": "main-capability",
+  "description": "Main window permissions",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:event:default",
+    "core:window:default",
+    "core:app:default",
+    "core:path:default",
+    "notification:default",
+    "notification:allow-notify",
+    "notification:allow-is-permission-granted",
+    "notification:allow-request-permission",
+    "shell:allow-open"
+  ]
+}
