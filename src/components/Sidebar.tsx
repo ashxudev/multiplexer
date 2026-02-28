@@ -10,7 +10,7 @@ import {
   Clock,
   XCircle,
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -161,9 +161,8 @@ function ArchivedSection({ campaigns }: { campaigns: Campaign[] }) {
     try {
       await api.unarchiveCampaign(campaignId);
       unarchiveCampaignLocal(campaignId);
-    } catch {
-      // fallback: just update local state
-      unarchiveCampaignLocal(campaignId);
+    } catch (e) {
+      console.error("Failed to unarchive campaign:", e);
     }
   };
 
@@ -212,7 +211,14 @@ export function Sidebar() {
   const [newCampaignName, setNewCampaignName] = useState("");
   const [newCampaignSeq, setNewCampaignSeq] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
   const seqInputRef = useRef<HTMLInputElement>(null);
+
+  // Fix 16: Read version from Tauri app info instead of hardcoding
+  const [version, setVersion] = useState("0.1.0");
+  useEffect(() => {
+    import("@tauri-apps/api/app").then((m) => m.getVersion()).then(setVersion).catch(() => {});
+  }, []);
 
   const activeCampaigns = campaigns.filter((c) => !c.archived);
   const archivedCampaigns = campaigns.filter((c) => c.archived);
@@ -220,30 +226,21 @@ export function Sidebar() {
   const handleCreateCampaign = async () => {
     if (!newCampaignName.trim() || !newCampaignSeq.trim() || submitting) return;
     setSubmitting(true);
+    setCreateError(null);
     try {
       const campaign = await api.createCampaign(
         newCampaignName.trim(),
         newCampaignSeq.trim()
       );
       addCampaign(campaign);
-    } catch {
-      // Not in Tauri — add mock campaign
-      addCampaign({
-        id: crypto.randomUUID(),
-        display_name: newCampaignName.trim(),
-        folder_name: newCampaignName.trim().toLowerCase().replace(/\s+/g, "-"),
-        protein_sequence: newCampaignSeq.trim(),
-        description: null,
-        archived: false,
-        archived_at: null,
-        created_at: new Date().toISOString(),
-        runs: [],
-      });
+      setNewCampaignName("");
+      setNewCampaignSeq("");
+      setCreatingCampaign(false);
+    } catch (e) {
+      setCreateError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSubmitting(false);
     }
-    setNewCampaignName("");
-    setNewCampaignSeq("");
-    setCreatingCampaign(false);
-    setSubmitting(false);
   };
 
   return (
@@ -286,6 +283,9 @@ export function Sidebar() {
                 if (e.key === "Escape") setCreatingCampaign(false);
               }}
             />
+            {createError && (
+              <p className="text-xs text-red-400">{createError}</p>
+            )}
             <div className="flex gap-1">
               <Button size="sm" className="h-6 flex-1 text-xs" onClick={handleCreateCampaign} disabled={submitting}>
                 Create
@@ -332,7 +332,7 @@ export function Sidebar() {
       <div className="border-t border-zinc-800 px-4 py-2">
         <div className="flex items-center gap-1.5 text-xs text-zinc-600">
           <Clock className="h-3 w-3" />
-          <span>v0.1.0</span>
+          <span>v{version}</span>
         </div>
       </div>
     </aside>

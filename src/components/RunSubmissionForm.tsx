@@ -136,6 +136,7 @@ export function RunSubmissionForm() {
           variant="ghost"
           size="icon-sm"
           onClick={() => setMainView("results")}
+          disabled={submitting}
           className="text-zinc-400 hover:text-zinc-200"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -310,7 +311,7 @@ export function RunSubmissionForm() {
                 <div className="flex items-center justify-between">
                   <Label className="text-xs">Step Scale</Label>
                   <span className="text-xs tabular-nums text-zinc-400">
-                    {stepScale.toFixed(3)}
+                    {stepScale.toFixed(2)}
                   </span>
                 </div>
                 <Slider
@@ -318,7 +319,7 @@ export function RunSubmissionForm() {
                   onValueChange={([v]) => setStepScale(v)}
                   min={0.5}
                   max={3.0}
-                  step={0.001}
+                  step={0.01}
                 />
               </div>
             </div>

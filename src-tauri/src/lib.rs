@@ -14,6 +14,8 @@ use tokio_util::sync::CancellationToken;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Note: env_logger outputs to stderr, which is not visible in packaged .app bundles.
+    // For production logging, consider migrating to tauri-plugin-log.
     env_logger::init();
 
     tauri::Builder::default()
@@ -69,31 +71,31 @@ pub fn run() {
             app.manage(state.clone());
             app.manage(client.clone());
 
-            // D2: Start persistence flusher (2-second dirty-flag loop)
-            storage::start_persistence_flusher(state.clone());
+            // D2: Start persistence flusher (2-second dirty-flag loop, cancellable)
+            storage::start_persistence_flusher(state.clone(), cancel_token.clone());
 
-            // Cleanup temp directory
-            let root_clone = root_dir.clone();
-            tauri::async_runtime::spawn(async move {
-                if let Err(e) = storage::cleanup_temp_dir(&root_clone).await {
-                    log::warn!("Failed to cleanup temp dir: {e}");
-                }
-            });
-
-            // Recover incomplete downloads
-            if !incomplete.is_empty() {
-                info!("Found {} incomplete downloads to recover", incomplete.len());
+            // Cleanup temp directory, then recover incomplete downloads.
+            // These must run sequentially: cleanup deletes .boltz-temp/,
+            // and recovery downloads into .boltz-temp/.
+            {
+                let root_clone = root_dir.clone();
                 let app_clone = app_handle.clone();
                 let state_clone = state.clone();
                 let client_clone = client.clone();
                 tauri::async_runtime::spawn(async move {
-                    poller::recover_incomplete_downloads(
-                        app_clone,
-                        state_clone,
-                        client_clone,
-                        incomplete,
-                    )
-                    .await;
+                    if let Err(e) = storage::cleanup_temp_dir(&root_clone).await {
+                        log::warn!("Failed to cleanup temp dir: {e}");
+                    }
+                    if !incomplete.is_empty() {
+                        info!("Found {} incomplete downloads to recover", incomplete.len());
+                        poller::recover_incomplete_downloads(
+                            app_clone,
+                            state_clone,
+                            client_clone,
+                            incomplete,
+                        )
+                        .await;
+                    }
                 });
             }
 

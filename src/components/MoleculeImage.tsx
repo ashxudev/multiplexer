@@ -42,11 +42,18 @@ export function MoleculeImage({
     );
   }
 
+  // Render as data URL <img> instead of dangerouslySetInnerHTML to prevent
+  // any potential script execution from SVG content.
   return (
     <div
       className={`flex items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 ${className ?? ""}`}
       title={smiles}
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
+    >
+      <img
+        src={`data:image/svg+xml;base64,${btoa(svg)}`}
+        alt={smiles}
+        className="h-full w-full object-contain"
+      />
+    </div>
   );
 }

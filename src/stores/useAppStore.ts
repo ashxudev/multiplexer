@@ -81,6 +81,7 @@ export type MainView = "onboarding" | "results" | "new-run";
 
 export interface AppState {
   campaigns: Campaign[];
+  loading: boolean;
   loadError: string | null;
   selectedCampaignId: string | null;
   selectedRunId: string | null;
@@ -115,6 +116,7 @@ export interface AppState {
 
 export const useAppStore = create<AppState>()((set) => ({
   campaigns: [],
+  loading: true,
   loadError: null,
   selectedCampaignId: null,
   selectedRunId: null,
@@ -161,6 +163,7 @@ export const useAppStore = create<AppState>()((set) => ({
 
   // API-backed actions
   loadCampaigns: async () => {
+    set({ loading: true });
     try {
       const campaigns = await tauriApi.getCampaigns();
       // Mark completed compounds as filesReady so PAE/Mol* viewers render on startup.
@@ -177,10 +180,10 @@ export const useAppStore = create<AppState>()((set) => ({
           }
         }
       }
-      set({ campaigns, loadError: null });
+      set({ campaigns, loadError: null, loading: false });
     } catch (e) {
       console.error("Failed to load campaigns:", e);
-      set({ loadError: String(e) });
+      set({ loadError: String(e), loading: false });
     }
   },
 

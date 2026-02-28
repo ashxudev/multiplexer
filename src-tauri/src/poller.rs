@@ -524,39 +524,32 @@ async fn download_and_store(
         return;
     }
 
-    // Re-lock for atomic path resolve + rename (D5: handles concurrent renames).
+    // D5: Re-resolve path under lock (handles concurrent renames), then rename outside lock.
+    // The rename is done without holding the Mutex to avoid blocking other tasks
+    // if the source and destination happen to be on different volumes.
     let dest = {
         let guard = state.lock().await;
         match storage::resolve_compound_path(&guard.data, compound_ref.compound_id) {
-            Ok(relative) => {
-                let dest = root_dir.join(&relative);
-                // Rename is atomic on APFS (~microseconds) — safe to hold lock briefly
-                match tokio::fs::rename(&temp_dir, &dest).await {
-                    Ok(()) => Some(dest),
-                    Err(e) => {
-                        error!(
-                            "Failed to move compound files from {} to {}: {e}",
-                            temp_dir.display(),
-                            dest.display()
-                        );
-                        None
-                    }
-                }
-            }
+            Ok(relative) => root_dir.join(&relative),
             Err(e) => {
                 error!("Failed to resolve path for {}: {e}", compound_ref.compound_id);
-                None
+                drop(guard);
+                set_download_error(&state, compound_ref.compound_id, &format!("Failed to resolve output path: {e}")).await;
+                return;
             }
         }
     };
 
-    let dest = match dest {
-        Some(d) => d,
-        None => {
-            set_download_error(&state, compound_ref.compound_id, "Failed to store compound files on disk").await;
-            return;
-        }
-    };
+    // Rename outside lock — atomic on APFS when same volume
+    if let Err(e) = tokio::fs::rename(&temp_dir, &dest).await {
+        error!(
+            "Failed to move compound files from {} to {}: {e}",
+            temp_dir.display(),
+            dest.display()
+        );
+        set_download_error(&state, compound_ref.compound_id, "Failed to store compound files on disk").await;
+        return;
+    }
 
     // Success — clear any previous download error
     {
