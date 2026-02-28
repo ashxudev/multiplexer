@@ -2,6 +2,7 @@ use crate::models::{AppData, AppError, AppResult, AppState, CompoundRef, JobStat
 use log::{error, info, warn};
 use std::path::{Path, PathBuf};
 use tokio::task::JoinHandle;
+use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
 
 // ---------------------------------------------------------------------------
@@ -23,7 +24,16 @@ pub fn load_state(root_dir: &Path) -> AppResult<AppState> {
         }
 
         let content = std::fs::read_to_string(&state_path)?;
-        serde_json::from_str(&content)?
+        let data: AppData = serde_json::from_str(&content)?;
+
+        if data.schema_version > 1 {
+            return Err(AppError::Other(format!(
+                "Unsupported state schema version {}. Please update Multiplexer.",
+                data.schema_version
+            )));
+        }
+
+        data
     } else {
         AppData::default()
     };
@@ -50,13 +60,20 @@ pub fn persist_state(root_dir: &Path, data: &AppData) -> AppResult<()> {
 
 /// D2: Spawns a 2-second interval flusher. If `dirty` is set, clones data,
 /// resets the flag, drops the lock, then persists via spawn_blocking.
-pub fn start_persistence_flusher(state: SharedState) -> JoinHandle<()> {
+/// Cancellable via the provided token to avoid racing with shutdown persist.
+pub fn start_persistence_flusher(state: SharedState, cancel: CancellationToken) -> JoinHandle<()> {
     tokio::spawn(async move {
         // A10: Skip the t=0 tick — start after the first 2-second delay
         let start = tokio::time::Instant::now() + std::time::Duration::from_secs(2);
         let mut interval = tokio::time::interval_at(start, std::time::Duration::from_secs(2));
         loop {
-            interval.tick().await;
+            tokio::select! {
+                _ = cancel.cancelled() => {
+                    info!("Persistence flusher cancelled, shutting down");
+                    break;
+                }
+                _ = interval.tick() => {}
+            }
 
             let (should_persist, data_clone, root_dir) = {
                 let mut guard = state.lock().await;

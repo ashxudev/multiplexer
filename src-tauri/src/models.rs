@@ -24,6 +24,8 @@ pub struct AppState {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppData {
     pub schema_version: u32,
+    /// **Security note:** Stored in plaintext in state.json.
+    /// Future: migrate to macOS Keychain via `keyring` crate.
     pub api_key: Option<String>,
     pub campaigns: Vec<Campaign>,
 }

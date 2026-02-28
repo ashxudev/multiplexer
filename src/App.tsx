@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
 import { ResultsTable } from "@/components/ResultsTable";
 import { CompoundDetail } from "@/components/CompoundDetail";
@@ -13,6 +14,15 @@ function MainPanel() {
   const campaigns = useAppStore((s) => s.campaigns);
   const selectedCompoundId = useAppStore((s) => s.selectedCompoundId);
   const loadError = useAppStore((s) => s.loadError);
+  const loading = useAppStore((s) => s.loading);
+
+  if (loading) {
+    return (
+      <main className="flex-1 flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+      </main>
+    );
+  }
 
   if (loadError && campaigns.length === 0) {
     return (
@@ -68,9 +78,11 @@ function App() {
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      // Ignore shortcuts when typing in inputs
-      const tag = (e.target as HTMLElement)?.tagName;
+      // Ignore shortcuts when typing in inputs or contentEditable elements
+      const target = e.target as HTMLElement;
+      const tag = target?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (target?.isContentEditable) return;
 
       const meta = e.metaKey || e.ctrlKey;
 

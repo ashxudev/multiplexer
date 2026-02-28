@@ -344,109 +344,118 @@ pub async fn create_run(
         persist_state_async(root_owned, data).await?;
     }
 
-    // D7: Submit compounds with bounded concurrency (5 permits)
-    let semaphore = Arc::new(Semaphore::new(5));
-    let mut handles = Vec::new();
+    // Return the run immediately (all compounds in Pending state).
+    // The frontend's useTauriEvents listener will update compound statuses live
+    // as each submission completes via compound-status-changed events.
+    let run_snapshot = run.clone();
 
-    for (idx, compound_input) in compounds.iter().enumerate() {
-        let permit = semaphore.clone().acquire_owned().await.map_err(|_| {
-            AppError::Other("Submission semaphore closed".into())
-        })?;
+    // D7: Spawn background task to submit compounds with bounded concurrency (5 permits).
+    // This avoids blocking the UI for the entire batch submission.
+    let state_owned = state.inner().clone();
+    let client_owned = client.inner().clone();
+    tokio::spawn(async move {
+        let semaphore = Arc::new(Semaphore::new(5));
+        let mut handles = Vec::new();
 
-        let app_clone = app.clone();
-        let state_clone = state.inner().clone();
-        let client_clone = client.inner().clone();
-        let api_key_clone = api_key.clone();
-        let protein_seq = protein_sequence.clone();
-        let compound_id = compound_structs[idx].id;
-        let smiles = compound_input.smiles.clone();
-        let params_clone = params.clone();
-        let run_id = run.id;
-        let campaign_id_clone = campaign_id;
-
-        handles.push(tokio::spawn(async move {
-            let result = submit_single_compound(
-                &client_clone,
-                &api_key_clone,
-                &protein_seq,
-                &smiles,
-                &params_clone,
-            )
-            .await;
-
-            let now = Utc::now();
-            let mut guard = state_clone.lock().await;
-
-            match result {
-                Ok(resp) => {
-                    if let Some(compound) = guard.data.find_compound_mut(compound_id) {
-                        compound.boltz_job_id = Some(resp.prediction_id);
-                        compound.status = JobStatus::Created;
-                        compound.submitted_at = Some(now);
-                    }
-                    guard.dirty = true;
-
-                    let _ = app_clone.emit(
-                        "compound-status-changed",
-                        &CompoundStatusEvent {
-                            compound_id,
-                            run_id,
-                            campaign_id: campaign_id_clone,
-                            status: JobStatus::Created,
-                            metrics: None,
-                            completed_at: None,
-                        },
-                    );
+        for (idx, compound_input) in compounds.iter().enumerate() {
+            let permit = match semaphore.clone().acquire_owned().await {
+                Ok(p) => p,
+                Err(_) => {
+                    error!("Submission semaphore closed");
+                    break;
                 }
-                Err(e) => {
-                    error!("Failed to submit compound {compound_id}: {e}");
-                    if let Some(compound) = guard.data.find_compound_mut(compound_id) {
-                        compound.status = JobStatus::Failed;
-                        compound.completed_at = Some(now);
-                        compound.error_message = Some(e.to_string());
-                    }
-                    guard.dirty = true;
+            };
 
-                    let _ = app_clone.emit(
-                        "compound-status-changed",
-                        &CompoundStatusEvent {
-                            compound_id,
-                            run_id,
-                            campaign_id: campaign_id_clone,
-                            status: JobStatus::Failed,
-                            metrics: None,
-                            completed_at: Some(now),
-                        },
-                    );
+            let app_clone = app.clone();
+            let state_clone = state_owned.clone();
+            let client_clone = client_owned.clone();
+            let api_key_clone = api_key.clone();
+            let protein_seq = protein_sequence.clone();
+            let compound_id = compound_structs[idx].id;
+            let smiles = compound_input.smiles.clone();
+            let params_clone = params.clone();
+            let run_id = run.id;
+            let campaign_id_clone = campaign_id;
+
+            handles.push(tokio::spawn(async move {
+                let result = submit_single_compound(
+                    &client_clone,
+                    &api_key_clone,
+                    &protein_seq,
+                    &smiles,
+                    &params_clone,
+                )
+                .await;
+
+                let now = Utc::now();
+                let mut guard = state_clone.lock().await;
+
+                match result {
+                    Ok(resp) => {
+                        if let Some(compound) = guard.data.find_compound_mut(compound_id) {
+                            compound.boltz_job_id = Some(resp.prediction_id);
+                            compound.status = JobStatus::Created;
+                            compound.submitted_at = Some(now);
+                        }
+                        guard.dirty = true;
+
+                        let _ = app_clone.emit(
+                            "compound-status-changed",
+                            &CompoundStatusEvent {
+                                compound_id,
+                                run_id,
+                                campaign_id: campaign_id_clone,
+                                status: JobStatus::Created,
+                                metrics: None,
+                                completed_at: None,
+                            },
+                        );
+                    }
+                    Err(e) => {
+                        error!("Failed to submit compound {compound_id}: {e}");
+                        if let Some(compound) = guard.data.find_compound_mut(compound_id) {
+                            compound.status = JobStatus::Failed;
+                            compound.completed_at = Some(now);
+                            compound.error_message = Some(e.to_string());
+                        }
+                        guard.dirty = true;
+
+                        let _ = app_clone.emit(
+                            "compound-status-changed",
+                            &CompoundStatusEvent {
+                                compound_id,
+                                run_id,
+                                campaign_id: campaign_id_clone,
+                                status: JobStatus::Failed,
+                                metrics: None,
+                                completed_at: Some(now),
+                            },
+                        );
+                    }
                 }
+
+                drop(permit);
+            }));
+        }
+
+        // Wait for all submissions
+        for handle in handles {
+            let _ = handle.await;
+        }
+
+        // Persist final state after all submissions
+        {
+            let guard = state_owned.lock().await;
+            let root = guard.root_dir.clone();
+            let data = guard.data.clone();
+            drop(guard);
+            if let Err(e) = persist_state_async(root, data).await {
+                error!("Failed to persist after batch submission: {e}");
             }
+        }
+    });
 
-            drop(permit);
-        }));
-    }
-
-    // Wait for all submissions
-    for handle in handles {
-        let _ = handle.await;
-    }
-
-    // Persist final state after all submissions
-    {
-        let guard = state.lock().await;
-        let root = guard.root_dir.clone();
-        let data = guard.data.clone();
-        drop(guard);
-        persist_state_async(root, data).await?;
-    }
-
-    // Return the updated run
-    let guard = state.lock().await;
-    let updated_run = guard
-        .data
-        .find_run(run.id)
-        .cloned()
-        .unwrap_or(run);
-    Ok(updated_run)
+    Ok(run_snapshot)
 }
 
 async fn submit_single_compound(
