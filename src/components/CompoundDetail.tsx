@@ -178,6 +178,16 @@ export function CompoundDetail() {
 
           <Separator className="bg-zinc-800" />
 
+          {/* Download error (compound completed but files unavailable) */}
+          {compound.download_error && (
+            <div className="rounded-md border border-amber-900/50 bg-amber-950/30 p-3">
+              <p className="text-xs font-medium text-amber-400">Download issue</p>
+              <p className="mt-1 text-xs text-amber-300/80">
+                {compound.download_error}
+              </p>
+            </div>
+          )}
+
           {/* Error message */}
           {compound.error_message && (
             <div className="rounded-md border border-red-900/50 bg-red-950/30 p-3">

@@ -40,6 +40,7 @@ export interface Compound {
   completed_at: string | null;
   metrics: CompoundMetrics | null;
   error_message: string | null;
+  download_error: string | null;
   filesReady?: boolean;
 }
 

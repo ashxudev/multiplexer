@@ -308,6 +308,7 @@ pub async fn create_run(
                 completed_at: None,
                 metrics: None,
                 error_message: None,
+                download_error: None,
             }
         })
         .collect();
@@ -688,6 +689,7 @@ pub async fn retry_compound(
             compound.completed_at = None;
             compound.metrics = None;
             compound.error_message = None;
+            compound.download_error = None;
         }
         guard.dirty = true;
 

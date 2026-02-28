@@ -95,6 +95,8 @@ pub struct Compound {
     pub completed_at: Option<DateTime<Utc>>,
     pub metrics: Option<CompoundMetrics>,
     pub error_message: Option<String>,
+    #[serde(default)]
+    pub download_error: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -397,9 +399,14 @@ pub fn sanitise_folder_name(name: &str) -> String {
         .collect::<String>()
         .to_lowercase();
     let s = s.trim_matches('-').to_string();
-    // Truncate to 200 chars to stay within filesystem limits (255 bytes)
+    // Truncate to ~200 bytes to stay within filesystem limits (255 bytes).
+    // Find the nearest char boundary to avoid panicking on multi-byte UTF-8.
     let s = if s.len() > 200 {
-        s[..200].trim_end_matches('-').to_string()
+        let mut end = 200;
+        while end > 0 && !s.is_char_boundary(end) {
+            end -= 1;
+        }
+        s[..end].trim_end_matches('-').to_string()
     } else {
         s
     };
