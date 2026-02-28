@@ -433,9 +433,24 @@ async fn on_compound_failed(
     }
 }
 
+/// Set download_error on a compound without changing its status.
+/// The compound stays Completed so scan_incomplete_downloads can recover it.
+async fn set_download_error(state: &SharedState, compound_id: uuid::Uuid, error_msg: &str) {
+    let mut guard = state.lock().await;
+    if let Some(compound) = guard.data.find_compound_mut(compound_id) {
+        compound.download_error = Some(error_msg.to_string());
+        guard.dirty = true;
+    }
+}
+
 /// D5: Download + extract + move under lock for path safety.
 /// A2: Uses injected BoltzClient for retry + connection pooling.
 /// A14: create_dir_all runs outside the lock; only rename is under lock.
+///
+/// On failure, sets download_error instead of overwriting status to Failed.
+/// This preserves the Completed status so that:
+///   1. scan_incomplete_downloads can recover the download on restart
+///   2. retry_compound doesn't re-submit the (already-completed) prediction
 async fn download_and_store(
     app_handle: AppHandle,
     state: SharedState,
@@ -456,14 +471,7 @@ async fn download_and_store(
                 "Failed to download compound {}: {e}",
                 compound_ref.compound_id
             );
-            on_compound_failed(
-                &app_handle,
-                &state,
-                &compound_ref,
-                JobStatus::Failed,
-                &format!("Download failed: {e}"),
-            )
-            .await;
+            set_download_error(&state, compound_ref.compound_id, &format!("Download failed: {e}")).await;
             return;
         }
     };
@@ -479,14 +487,7 @@ async fn download_and_store(
             "Failed to extract compound {}: {e}",
             compound_ref.compound_id
         );
-        on_compound_failed(
-            &app_handle,
-            &state,
-            &compound_ref,
-            JobStatus::Failed,
-            &format!("Extraction failed: {e}"),
-        )
-        .await;
+        set_download_error(&state, compound_ref.compound_id, &format!("Extraction failed: {e}")).await;
         return;
     }
 
@@ -497,14 +498,7 @@ async fn download_and_store(
             compound_ref.compound_id
         );
         let _ = tokio::fs::remove_dir_all(&temp_dir).await;
-        on_compound_failed(
-            &app_handle,
-            &state,
-            &compound_ref,
-            JobStatus::Failed,
-            &format!("Extraction validation failed: {e}"),
-        )
-        .await;
+        set_download_error(&state, compound_ref.compound_id, &format!("Extraction validation failed: {e}")).await;
         return;
     }
 
@@ -517,10 +511,7 @@ async fn download_and_store(
             Err(e) => {
                 error!("Failed to resolve path for {}: {e}", compound_ref.compound_id);
                 drop(guard);
-                on_compound_failed(
-                    &app_handle, &state, &compound_ref, JobStatus::Failed,
-                    &format!("Failed to resolve output path: {e}"),
-                ).await;
+                set_download_error(&state, compound_ref.compound_id, &format!("Failed to resolve output path: {e}")).await;
                 return;
             }
         }
@@ -529,15 +520,11 @@ async fn download_and_store(
     // Create parent directories outside lock (idempotent, no state mutation)
     if let Err(e) = tokio::fs::create_dir_all(pre_dest.parent().unwrap_or(&root_dir)).await {
         error!("Failed to create parent dir: {e}");
-        on_compound_failed(
-            &app_handle, &state, &compound_ref, JobStatus::Failed,
-            &format!("Failed to create output directory: {e}"),
-        ).await;
+        set_download_error(&state, compound_ref.compound_id, &format!("Failed to create output directory: {e}")).await;
         return;
     }
 
     // Re-lock for atomic path resolve + rename (D5: handles concurrent renames).
-    // Returns Option<PathBuf> so on_compound_failed can be called outside the lock.
     let dest = {
         let guard = state.lock().await;
         match storage::resolve_compound_path(&guard.data, compound_ref.compound_id) {
@@ -566,13 +553,19 @@ async fn download_and_store(
     let dest = match dest {
         Some(d) => d,
         None => {
-            on_compound_failed(
-                &app_handle, &state, &compound_ref, JobStatus::Failed,
-                "Failed to store compound files on disk",
-            ).await;
+            set_download_error(&state, compound_ref.compound_id, "Failed to store compound files on disk").await;
             return;
         }
     };
+
+    // Success — clear any previous download error
+    {
+        let mut guard = state.lock().await;
+        if let Some(compound) = guard.data.find_compound_mut(compound_ref.compound_id) {
+            compound.download_error = None;
+            guard.dirty = true;
+        }
+    }
 
     info!(
         "Compound {} files stored at {}",

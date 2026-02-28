@@ -227,24 +227,22 @@ pub async fn extract_tar_gz(bytes: Vec<u8>, temp_dir: std::path::PathBuf) -> App
             let relative: std::path::PathBuf =
                 components[1..].iter().collect();
 
+            // Zip-slip protection: reject entries with ".." components.
+            // Note: Path::starts_with is NOT sufficient — it only checks prefix
+            // components and ignores ".." that appears after the matched prefix.
+            if relative.components().any(|c| matches!(c, std::path::Component::ParentDir)) {
+                return Err(AppError::Other(format!(
+                    "Path traversal detected in archive entry: {}",
+                    relative.display()
+                )));
+            }
+
             // Rename per convention
             let filename = relative
                 .to_string_lossy()
                 .replace("_predicted_structure.", "_structure.")
                 .replace("_pae_visualization.", "_pae.");
             let dest = temp_dir.join(&filename);
-
-            // Zip-slip protection: verify dest resolves inside temp_dir BEFORE creating dirs
-            let canonical_temp = temp_dir.canonicalize()?;
-            // Use the logical joined path for the check — dest.parent() may not exist yet,
-            // so we normalize by checking that the joined path starts with temp_dir.
-            // Since temp_dir is absolute and canonical, starts_with on the raw path
-            // catches ".." traversal even without canonicalize on the dest side.
-            if !dest.starts_with(&canonical_temp) {
-                return Err(AppError::Other(format!(
-                    "Path traversal detected in archive entry: {filename}"
-                )));
-            }
 
             if let Some(parent) = dest.parent() {
                 std::fs::create_dir_all(parent)?;
