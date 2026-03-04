@@ -1,6 +1,6 @@
 import { app, BrowserWindow, shell } from 'electron';
 import { join } from 'path';
-import { createIPCHandler } from 'electron-trpc/main';
+import { createIPCHandler } from 'trpc-electron/main';
 import { appRouter } from './trpc/router';
 import { createContext } from './trpc/context';
 import { AppServices } from './services';
@@ -43,7 +43,7 @@ app.whenReady().then(() => {
   services = AppServices.initialize();
   mainWindow = createWindow();
 
-  createIPCHandler({
+  const ipcHandler = createIPCHandler({
     router: appRouter,
     windows: [mainWindow],
     createContext: () => createContext(services!),
@@ -53,11 +53,7 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       mainWindow = createWindow();
-      createIPCHandler({
-        router: appRouter,
-        windows: [mainWindow],
-        createContext: () => createContext(services!),
-      });
+      ipcHandler.attachWindow(mainWindow);
     }
   });
 });
