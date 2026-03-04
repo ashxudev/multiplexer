@@ -1,0 +1,57 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# Editor & IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.cursor/
+
+# Claude / AI
+claude.md
+CLAUDE.md
+agents.md
+AGENTS.md
+.claude/
+*plan*.md
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.env
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+out/
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Playwright screenshots
+playwright/
+
+# Misc
+*.bak
+*.tmp
+*.orig
