@@ -31,7 +31,7 @@
     "react-resizable-panels": "^2.1.7",
     "tailwind-merge": "^3.5.0",
     "tar": "^7.4.3",
-    "electron-trpc": "1.0.0-alpha.0",
+    "trpc-electron": "0.1.2",
     "uuid": "^11.1.0",
     "zod": "^3.24.4",
     "zustand": "^5.0.11"

@@ -1,6 +1,7 @@
 import { createTRPCReact } from '@trpc/react-query';
 import type { TRPCLink } from '@trpc/client';
 import { observable } from '@trpc/server/observable';
+import { ipcLink } from 'trpc-electron/renderer';
 import type { AppRouter } from '../../../main/trpc/router';
 
 export const trpc = createTRPCReact<AppRouter>();
@@ -165,9 +166,6 @@ function mockLink(): TRPCLink<any> {
 
 export function createTrpcClient() {
   if (isElectron()) {
-    // Dynamic import avoids loading electron-trpc in browser context
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { ipcLink } = require('electron-trpc/renderer') as typeof import('electron-trpc/renderer');
     return trpc.createClient({
       links: [ipcLink()],
     });
