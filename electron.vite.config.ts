@@ -5,7 +5,7 @@ import { resolve } from 'path';
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()],
+    plugins: [externalizeDepsPlugin({ exclude: ['trpc-electron'] })],
     build: {
       rollupOptions: {
         external: ['tar'],
@@ -13,7 +13,15 @@ export default defineConfig({
     },
   },
   preload: {
-    plugins: [externalizeDepsPlugin()],
+    plugins: [externalizeDepsPlugin({ exclude: ['trpc-electron'] })],
+    build: {
+      rollupOptions: {
+        output: {
+          format: 'cjs',
+          entryFileNames: '[name].js',
+        },
+      },
+    },
   },
   renderer: {
     plugins: [react(), tailwindcss()],

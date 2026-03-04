@@ -35,9 +35,6 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
-      electron-trpc:
-        specifier: 1.0.0-alpha.0
-        version: 1.0.0-alpha.0(@trpc/client@11.11.0(@trpc/server@11.11.0(typescript@5.9.3))(typescript@5.9.3))(@trpc/server@11.11.0(typescript@5.9.3))(electron@35.7.5)
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.1
@@ -71,6 +68,9 @@ importers:
       tar:
         specifier: ^7.4.3
         version: 7.5.9
+      trpc-electron:
+        specifier: ^0.1.2
+        version: 0.1.2(@trpc/client@11.11.0(@trpc/server@11.11.0(typescript@5.9.3))(typescript@5.9.3))(@trpc/server@11.11.0(typescript@5.9.3))(electron@35.7.5)
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
@@ -2092,13 +2092,6 @@ packages:
   electron-to-chromium@1.5.307:
     resolution: {integrity: sha512-5z3uFKBWjiNR44nFcYdkcXjKMbg5KXNdciu7mhTPo9tB7NbqSNP2sSnGR+fqknZSCwKkBN+oxiiajWs4dT6ORg==}
 
-  electron-trpc@1.0.0-alpha.0:
-    resolution: {integrity: sha512-wNx4hSJNUTADmRSdW+v4lajH4jl0M4gybzvvJrSI9eCU3OshXq5qoPJwHh/xxjosmEFTzYmgkuWEB2We9xkgqg==}
-    peerDependencies:
-      '@trpc/client': '>10.0.0'
-      '@trpc/server': '>10.0.0'
-      electron: '>19.0.0'
-
   electron-vite@3.1.0:
     resolution: {integrity: sha512-M7aAzaRvSl5VO+6KN4neJCYLHLpF/iWo5ztchI/+wMxIieDZQqpbCYfaEHHHPH6eupEzfvZdLYdPdmvGqoVe0Q==}
     engines: {node: ^18.0.0 || >=20.0.0}
@@ -3731,6 +3724,13 @@ packages:
 
   trough@2.2.0:
     resolution: {integrity: sha512-tmMpK00BjZiUyVyvrBK7knerNgmgvcV/KLVyuma/SC+TQN167GrMRciANTz09+k3zW8L8t60jWO1GpfkZdjTaw==}
+
+  trpc-electron@0.1.2:
+    resolution: {integrity: sha512-sQpWBwQWzsgrERugjzUpPqY/+/n8NxkUq6YssQ5+5rALkvGCWq45T5Dreiwm2kh91dZMFlALTyMd8PhB0vgbIg==}
+    peerDependencies:
+      '@trpc/client': '>=11.0.0'
+      '@trpc/server': '>=11.0.0'
+      electron: '>19.0.0'
 
   truncate-utf8-bytes@1.0.2:
     resolution: {integrity: sha512-95Pu1QXQvruGEhv62XCMO3Mm90GscOCClvrIUwCM0PYOXK3kaF3l3sIHxx71ThJfcbM2O5Au6SO3AWCSEfW4mQ==}
@@ -6142,15 +6142,6 @@ snapshots:
 
   electron-to-chromium@1.5.307: {}
 
-  electron-trpc@1.0.0-alpha.0(@trpc/client@11.11.0(@trpc/server@11.11.0(typescript@5.9.3))(typescript@5.9.3))(@trpc/server@11.11.0(typescript@5.9.3))(electron@35.7.5):
-    dependencies:
-      '@trpc/client': 11.11.0(@trpc/server@11.11.0(typescript@5.9.3))(typescript@5.9.3)
-      '@trpc/server': 11.11.0(typescript@5.9.3)
-      debug: 4.4.3
-      electron: 35.7.5
-    transitivePeerDependencies:
-      - supports-color
-
   electron-vite@3.1.0(vite@6.4.1(@types/node@25.3.3)(jiti@2.6.1)(lightningcss@1.31.1)):
     dependencies:
       '@babel/core': 7.29.0
@@ -8314,6 +8305,12 @@ snapshots:
   trim-lines@3.0.1: {}
 
   trough@2.2.0: {}
+
+  trpc-electron@0.1.2(@trpc/client@11.11.0(@trpc/server@11.11.0(typescript@5.9.3))(typescript@5.9.3))(@trpc/server@11.11.0(typescript@5.9.3))(electron@35.7.5):
+    dependencies:
+      '@trpc/client': 11.11.0(@trpc/server@11.11.0(typescript@5.9.3))(typescript@5.9.3)
+      '@trpc/server': 11.11.0(typescript@5.9.3)
+      electron: 35.7.5
 
   truncate-utf8-bytes@1.0.2:
     dependencies:
