@@ -52,15 +52,23 @@ export function CompoundDetail({ compoundId }: { compoundId: string }) {
         </div>
 
         {/* Metrics */}
-        {c.metrics && (
+        {c.metrics && c.metrics.samples[0] && (
           <div className="grid grid-cols-2 gap-3">
             <MetricCard
-              label="Binding Confidence"
-              value={c.metrics.affinity.binding_confidence}
+              label="Structure Confidence"
+              value={c.metrics.samples[0].structure_confidence}
             />
             <MetricCard
-              label="Optimization Score"
-              value={c.metrics.affinity.optimization_score}
+              label="Ligand iPTM"
+              value={c.metrics.samples[0].ligand_iptm}
+            />
+            <MetricCard
+              label="Complex pLDDT"
+              value={c.metrics.samples[0].complex_plddt}
+            />
+            <MetricCard
+              label="iPTM"
+              value={c.metrics.samples[0].iptm}
             />
           </div>
         )}
@@ -76,11 +84,11 @@ export function CompoundDetail({ compoundId }: { compoundId: string }) {
   );
 }
 
-function MetricCard({ label, value }: { label: string; value: number }) {
+function MetricCard({ label, value }: { label: string; value: number | null }) {
   return (
     <div className="rounded-md border border-border bg-surface p-3">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-lg font-semibold tabular-nums">{value.toFixed(3)}</p>
+      <p className="text-lg font-semibold tabular-nums">{value != null ? value.toFixed(3) : '—'}</p>
     </div>
   );
 }

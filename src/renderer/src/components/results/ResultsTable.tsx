@@ -29,8 +29,8 @@ export function ResultsTable({ runId }: { runId: string }) {
             <th className="px-4 py-2 text-left font-medium text-muted-foreground">Status</th>
             <th className="px-4 py-2 text-left font-medium text-muted-foreground">Compound</th>
             <th className="px-4 py-2 text-left font-medium text-muted-foreground">SMILES</th>
-            <th className="px-4 py-2 text-right font-medium text-muted-foreground">Binding</th>
-            <th className="px-4 py-2 text-right font-medium text-muted-foreground">Optimization</th>
+            <th className="px-4 py-2 text-right font-medium text-muted-foreground">Confidence</th>
+            <th className="px-4 py-2 text-right font-medium text-muted-foreground">Ligand iPTM</th>
           </tr>
         </thead>
         <tbody>
@@ -48,10 +48,10 @@ export function ResultsTable({ runId }: { runId: string }) {
                 {compound.smiles}
               </td>
               <td className="px-4 py-2 text-right tabular-nums">
-                {compound.metrics?.affinity.binding_confidence.toFixed(3) ?? '—'}
+                {compound.metrics?.samples[0]?.structure_confidence?.toFixed(3) ?? '—'}
               </td>
               <td className="px-4 py-2 text-right tabular-nums">
-                {compound.metrics?.affinity.optimization_score.toFixed(3) ?? '—'}
+                {compound.metrics?.samples[0]?.ligand_iptm?.toFixed(3) ?? '—'}
               </td>
             </tr>
           ))}
