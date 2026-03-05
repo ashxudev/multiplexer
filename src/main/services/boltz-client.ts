@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from 'uuid';
-import yaml from 'js-yaml';
 import type {
   CompoundMetrics,
   AffinityMetrics,
@@ -96,8 +95,10 @@ export class BoltzClient {
     return this.withRetry(async () => {
       const body = {
         prediction_name: uuidv4(),
-        inference_input: inferenceInput,
-        inference_options: inferenceOptions,
+        prediction_inputs: {
+          inference_input: inferenceInput,
+          inference_options: inferenceOptions,
+        },
       };
 
       const resp = await fetch(url, {
@@ -196,16 +197,15 @@ export class BoltzClient {
 // ── Inference input builder ──────────────────────────────────────────
 
 /**
- * Build YAML inference input for the Boltz API.
- * Uses js-yaml to safely serialize SMILES strings that may contain
- * YAML-special characters like :, [, ], @, #.
+ * Build inference input for the Boltz API.
+ * Returns a JSON object with version and sequences array.
  */
 export function buildInferenceInput(
   proteinSequence: string,
   smiles: string,
   ligandChainId: string = 'B',
 ): unknown {
-  const yamlObj = {
+  return {
     version: 2,
     sequences: [
       {
@@ -215,19 +215,12 @@ export function buildInferenceInput(
         },
       },
       {
-        smiles: {
+        ligand: {
           id: ligandChainId,
-          value: smiles,
+          smiles,
         },
       },
     ],
-  };
-
-  const yamlContent = yaml.dump(yamlObj, { lineWidth: -1 });
-
-  return {
-    type: 'yaml_string',
-    value: yamlContent,
   };
 }
 
@@ -268,30 +261,32 @@ export function parseMetrics(prediction: PredictionStatus): CompoundMetrics {
     throw new Error('No metrics in output');
   }
 
-  // Parse affinity metrics
+  // Parse affinity metrics (optional — not present in all API versions)
   const affinityJson = metricsJson['affinity'] as Record<string, unknown> | undefined;
-  if (!affinityJson) {
-    throw new Error('No affinity metrics');
-  }
-
   const affinity: AffinityMetrics = {
     binding_confidence:
-      typeof affinityJson['binding_confidence'] === 'number'
+      typeof affinityJson?.['binding_confidence'] === 'number'
         ? affinityJson['binding_confidence']
         : 0,
     optimization_score:
-      typeof affinityJson['optimization_score'] === 'number'
+      typeof affinityJson?.['optimization_score'] === 'number'
         ? affinityJson['optimization_score']
         : 0,
   };
 
-  // Parse sample results
+  // Parse sample results — API returns an object keyed by sample name (e.g. "sample_0")
   const sampleResults = metricsJson['sample_results'];
-  if (!Array.isArray(sampleResults)) {
-    throw new Error('No sample_results array');
+  if (!sampleResults || typeof sampleResults !== 'object') {
+    throw new Error('No sample_results in metrics');
   }
 
-  const samples: SampleMetrics[] = sampleResults.map((s: Record<string, unknown>) => ({
+  const sampleEntries = Array.isArray(sampleResults)
+    ? (sampleResults as Record<string, unknown>[])
+    : Object.keys(sampleResults)
+        .sort()
+        .map((key) => (sampleResults as Record<string, Record<string, unknown>>)[key]);
+
+  const samples: SampleMetrics[] = sampleEntries.map((s: Record<string, unknown>) => ({
     structure_confidence: getNumber(s, 'structure_confidence'),
     iptm: getNumber(s, 'iptm'),
     ligand_iptm: getNumber(s, 'ligand_iptm'),
