@@ -69,7 +69,7 @@ importers:
         specifier: ^7.4.3
         version: 7.5.9
       trpc-electron:
-        specifier: ^0.1.2
+        specifier: 0.1.2
         version: 0.1.2(@trpc/client@11.11.0(@trpc/server@11.11.0(typescript@5.9.3))(typescript@5.9.3))(@trpc/server@11.11.0(typescript@5.9.3))(electron@35.7.5)
       uuid:
         specifier: ^11.1.0
