@@ -1,23 +1,31 @@
 import { PanelLeft } from 'lucide-react';
 import { useAppStore } from '@/stores/useAppStore';
+import { trpc } from '@/api/trpc';
 
 export function TopBar() {
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
+  const { data: platform } = trpc.window.getPlatform.useQuery();
+  // Default to macOS padding while loading to avoid overlap with traffic lights
+  const isMac = platform === undefined || platform === 'darwin';
 
   return (
     <div
-      className="h-10 flex items-center border-b border-border bg-background select-none"
+      className="h-12 w-full flex items-center justify-between border-b border-border bg-sidebar select-none"
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
-      {/* Positioned after macOS traffic lights (approx 70px from left) */}
-      <button
-        onClick={toggleSidebar}
-        className="ml-[70px] p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-        title="Toggle sidebar (Cmd+B)"
+      <div
+        className="flex items-center gap-1.5 h-full"
+        style={{ paddingLeft: isMac ? '88px' : '16px' }}
       >
-        <PanelLeft className="h-4 w-4" />
-      </button>
+        <button
+          onClick={toggleSidebar}
+          className="flex items-center justify-center size-7 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-accent/50"
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+          title="Toggle sidebar (Cmd+B)"
+        >
+          <PanelLeft className="size-4" />
+        </button>
+      </div>
     </div>
   );
 }
