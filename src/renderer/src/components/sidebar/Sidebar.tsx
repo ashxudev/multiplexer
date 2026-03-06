@@ -234,7 +234,7 @@ export function Sidebar() {
       <div className="px-3 pb-2">
         <button
           onClick={() => setView('new-campaign')}
-          className="flex items-center gap-2 px-2 py-1.5 w-full text-sm font-medium text-muted-foreground hover:text-foreground bg-accent/40 hover:bg-accent/60 rounded-md transition-colors"
+          className="flex items-center gap-2 px-2 py-1.5 w-full text-sm font-medium text-muted-foreground hover:text-foreground bg-accent/40 hover:bg-accent/60 rounded-md transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
         >
           <Plus className="size-3" />
           New Campaign

@@ -125,7 +125,12 @@ export const useAppStore = create<AppState>()(
         getItem: (name) => {
           const str = localStorage.getItem(name);
           if (!str) return null;
-          const parsed = JSON.parse(str);
+          let parsed;
+          try {
+            parsed = JSON.parse(str);
+          } catch {
+            return null;
+          }
           // Deserialize expandedCampaignIds from array back to Set
           if (parsed?.state?.expandedCampaignIds) {
             parsed.state.expandedCampaignIds = new Set(parsed.state.expandedCampaignIds);

@@ -97,7 +97,7 @@ export function WorkspaceView() {
     <div ref={containerRef} className="h-full">
       <PanelGroup direction="horizontal" onLayout={handleLayout}>
         {/* Sidebar — pixel constraints via CSS, matching Superset's workspace sidebar
-            (MIN = 200px, DEFAULT = 280px, MAX = 400px).
+            (MIN = 220px, DEFAULT = 280px, MAX = 400px).
             Loose percentage bounds let the library handle drag;
             CSS min/max-width enforces exact pixels. */}
         <Panel
