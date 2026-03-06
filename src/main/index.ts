@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell } from 'electron';
+import { app, BrowserWindow, nativeTheme, shell } from 'electron';
 import { join } from 'path';
 import { createIPCHandler } from 'trpc-electron/main';
 import { appRouter } from './trpc/router';
@@ -15,7 +15,8 @@ function createWindow(): BrowserWindow {
     minWidth: 800,
     minHeight: 600,
     titleBarStyle: 'hiddenInset',
-    trafficLightPosition: { x: 16, y: 12 },
+    trafficLightPosition: { x: 16, y: 16 },
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#252525' : '#ffffff',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
