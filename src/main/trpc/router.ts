@@ -4,6 +4,7 @@ import { campaignsRouter } from './routers/campaigns';
 import { runsRouter } from './routers/runs';
 import { compoundsRouter } from './routers/compounds';
 import { actionsRouter } from './routers/actions';
+import { windowRouter } from './routers/window';
 
 export const appRouter = router({
   settings: settingsRouter,
@@ -11,6 +12,7 @@ export const appRouter = router({
   runs: runsRouter,
   compounds: compoundsRouter,
   actions: actionsRouter,
+  window: windowRouter,
 });
 
 export type AppRouter = typeof appRouter;

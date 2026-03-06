@@ -1,40 +1,44 @@
 @import "tailwindcss";
 
-/* ── Dark theme (default) ─────────────────────────────────── */
+/* ── Dark theme (default) — matches Superset "Ember Dark" ── */
 :root {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.175 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.175 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.556 0 0);
-  --sidebar-background: oklch(0.175 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.985 0 0);
-  --sidebar-primary-foreground: oklch(0.205 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #151110;
+  --foreground: #eae8e6;
+  --card: #201e1c;
+  --card-foreground: #eae8e6;
+  --popover: #201e1c;
+  --popover-foreground: #eae8e6;
+  --primary: #eae8e6;
+  --primary-foreground: #151110;
+  --secondary: #2a2827;
+  --secondary-foreground: #eae8e6;
+  --muted: #2a2827;
+  --muted-foreground: #a8a5a3;
+  --accent: #2a2827;
+  --accent-foreground: #eae8e6;
+  --tertiary: #1a1716;
+  --tertiary-active: #252220;
+  --destructive: #cc4444;
+  --destructive-foreground: #ffcccc;
+  --border: #2a2827;
+  --input: #2a2827;
+  --ring: #3a3837;
+  --sidebar-background: #1a1716;
+  --sidebar-foreground: #eae8e6;
+  --sidebar-primary: #e07850;
+  --sidebar-primary-foreground: #151110;
+  --sidebar-accent: #252220;
+  --sidebar-accent-foreground: #eae8e6;
+  --sidebar-border: #2a2827;
+  --sidebar-ring: #3a3837;
+  --highlight-match: rgba(224, 120, 80, 0.2);
+  --highlight-active: rgba(224, 120, 80, 0.5);
 
   /* Semantic surface + text tokens */
-  --surface: oklch(0.21 0 0);
-  --dim: oklch(0.871 0 0);
-  --subtle: oklch(0.556 0 0);
-  --faint: oklch(0.442 0 0);
+  --surface: #201e1c;
+  --dim: #a8a5a3;
+  --subtle: #6a6765;
+  --faint: #4a4745;
 }
 
 /* ── Light theme ──────────────────────────────────────────── */
@@ -136,5 +140,14 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Override react-resizable-panels cursor (ew-resize → col-resize).
+     The library injects `* { cursor: ew-resize !important }` via CSSOM during
+     hover/drag. Our scoped rule has higher specificity (0,1,1) than `*` (0,0,0),
+     so it wins even with competing !important declarations. */
+  body:has([data-resize-handle-state="hover"]) *,
+  body:has([data-resize-handle-state="drag"]) * {
+    cursor: col-resize !important;
   }
 }

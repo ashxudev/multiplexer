@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Sun, Moon, Monitor } from 'lucide-react';
+import { ArrowLeft, Key, FolderOpen, Paintbrush, Sun, Moon, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,10 +10,10 @@ import { cn } from '@/lib/utils';
 
 type SettingsSection = 'general' | 'workspace' | 'appearance';
 
-const SECTIONS: { id: SettingsSection; label: string }[] = [
-  { id: 'general', label: 'General' },
-  { id: 'workspace', label: 'Workspace' },
-  { id: 'appearance', label: 'Appearance' },
+const SECTIONS: { id: SettingsSection; label: string; icon: typeof Key }[] = [
+  { id: 'general', label: 'General', icon: Key },
+  { id: 'workspace', label: 'Workspace', icon: FolderOpen },
+  { id: 'appearance', label: 'Appearance', icon: Paintbrush },
 ];
 
 export function SettingsPage() {
@@ -21,36 +21,42 @@ export function SettingsPage() {
   const [activeSection, setActiveSection] = useState<SettingsSection>('general');
 
   return (
-    <div className="h-full overflow-auto p-6">
-      <button
-        onClick={() => setView('workspace')}
-        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back
-      </button>
+    <div className="flex h-full bg-sidebar">
+      {/* Settings nav sidebar */}
+      <div className="w-56 shrink-0 flex flex-col overflow-auto">
+        <div className="px-3 pt-4 pb-2">
+          <button
+            onClick={() => setView('workspace')}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-accent/50 mb-2"
+          >
+            <ArrowLeft className="size-4" />
+            Back
+          </button>
+          <h1 className="text-lg font-semibold px-3 mb-3">Settings</h1>
+        </div>
 
-      <div className="mx-auto max-w-3xl flex gap-8">
-        {/* Left nav */}
-        <nav className="w-44 shrink-0 space-y-1">
+        <nav className="px-3 space-y-0.5">
           {SECTIONS.map((s) => (
             <button
               key={s.id}
               onClick={() => setActiveSection(s.id)}
               className={cn(
-                'w-full rounded-md px-3 py-1.5 text-left text-sm transition-colors',
+                'flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm transition-colors',
                 activeSection === s.id
-                  ? 'bg-muted text-foreground font-medium'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+                  ? 'bg-accent text-foreground font-medium'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
               )}
             >
+              <s.icon className="size-4" />
               {s.label}
             </button>
           ))}
         </nav>
+      </div>
 
-        {/* Content */}
-        <div className="flex-1 min-w-0">
+      {/* Settings content */}
+      <div className="flex-1 m-3 bg-background rounded-lg overflow-auto">
+        <div className="p-8 max-w-2xl">
           {activeSection === 'general' && <GeneralSettings />}
           {activeSection === 'workspace' && <WorkspaceSettings />}
           {activeSection === 'appearance' && <AppearanceSettings />}
@@ -91,7 +97,10 @@ function GeneralSettings() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold">General</h2>
+      <div>
+        <h2 className="text-lg font-semibold">General</h2>
+        <p className="text-sm text-muted-foreground">API keys and connection settings</p>
+      </div>
 
       <div className="space-y-2">
         <Label>Boltz API Key</Label>
@@ -137,7 +146,10 @@ function WorkspaceSettings() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold">Workspace</h2>
+      <div>
+        <h2 className="text-lg font-semibold">Workspace</h2>
+        <p className="text-sm text-muted-foreground">Configure your workspace directory</p>
+      </div>
 
       <div className="space-y-2">
         <Label>Workspace Root</Label>
@@ -173,7 +185,10 @@ function AppearanceSettings() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold">Appearance</h2>
+      <div>
+        <h2 className="text-lg font-semibold">Appearance</h2>
+        <p className="text-sm text-muted-foreground">Customize how Multiplexer looks</p>
+      </div>
 
       <div className="space-y-2">
         <Label>Theme</Label>

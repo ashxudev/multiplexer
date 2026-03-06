@@ -9,7 +9,6 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useMemo } from 'react';
-import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useAppStore } from '@/stores/useAppStore';
@@ -104,8 +103,8 @@ function CampaignItem({ campaign }: { campaign: Campaign }) {
           }
         }}
         className={cn(
-          'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted',
-          isSelected && 'bg-muted/50',
+          'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent/50',
+          isSelected && 'bg-accent text-foreground',
         )}
       >
         <ChevronRight
@@ -133,8 +132,8 @@ function CampaignItem({ campaign }: { campaign: Campaign }) {
                 setView('workspace');
               }}
               className={cn(
-                'flex w-full items-center justify-between rounded-md px-2 py-1 text-left text-sm transition-colors hover:bg-muted',
-                selectedRunId === run.id && 'bg-muted text-foreground',
+                'flex w-full items-center justify-between rounded-md px-2 py-1 text-left text-sm transition-colors hover:bg-accent/50',
+                selectedRunId === run.id && 'bg-accent text-foreground',
               )}
             >
               <span className="truncate text-dim">{run.display_name}</span>
@@ -146,7 +145,7 @@ function CampaignItem({ campaign }: { campaign: Campaign }) {
               selectCampaign(campaign.id);
               setView('new-run');
             }}
-            className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-xs text-subtle transition-colors hover:bg-muted hover:text-dim"
+            className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-xs text-subtle transition-colors hover:bg-accent/50 hover:text-dim"
           >
             <Plus className="h-3 w-3" />
             New Run
@@ -226,22 +225,20 @@ export function Sidebar() {
   const archivedCampaigns = allCampaigns.filter((c) => c.archived);
 
   return (
-    <aside className="flex h-full flex-col bg-background">
+    <aside className="flex h-full flex-col bg-sidebar">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
         <h1 className="text-base font-semibold tracking-tight">Multiplexer</h1>
       </div>
 
       <div className="px-3 pb-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full justify-start gap-2 border-border text-muted-foreground hover:text-foreground"
+        <button
           onClick={() => setView('new-campaign')}
+          className="flex items-center gap-2 px-2 py-1.5 w-full text-sm font-medium text-muted-foreground hover:text-foreground bg-accent/40 hover:bg-accent/60 rounded-md transition-colors"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <Plus className="size-3" />
           New Campaign
-        </Button>
+        </button>
       </div>
 
       <Separator className="bg-border" />
