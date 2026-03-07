@@ -37,7 +37,7 @@ export const compoundsRouter = router({
       return fs.readFileSync(cifPath, 'utf-8');
     }),
 
-  getPaeImagePath: publicProcedure
+  getPaeImageData: publicProcedure
     .input(
       z.object({
         compoundId: z.string().uuid(),
@@ -46,7 +46,9 @@ export const compoundsRouter = router({
     )
     .query(({ ctx, input }) => {
       const compoundDir = resolveCompoundPath(ctx.services.state, input.compoundId);
-      return path.join(compoundDir, `sample_${input.sampleIndex}_pae.png`);
+      const pngPath = path.join(compoundDir, `sample_${input.sampleIndex}_pae.png`);
+      const data = fs.readFileSync(pngPath);
+      return `data:image/png;base64,${data.toString('base64')}`;
     }),
 
   retry: publicProcedure

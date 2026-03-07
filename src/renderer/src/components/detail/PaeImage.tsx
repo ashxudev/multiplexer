@@ -7,12 +7,12 @@ interface PaeImageProps {
 }
 
 export function PaeImage({ compoundId, sampleIndex }: PaeImageProps) {
-  const pathQuery = trpc.compounds.getPaeImagePath.useQuery(
+  const imageQuery = trpc.compounds.getPaeImageData.useQuery(
     { compoundId, sampleIndex },
     { enabled: !!compoundId },
   );
 
-  if (pathQuery.isLoading) {
+  if (imageQuery.isLoading) {
     return (
       <div className="flex h-40 items-center justify-center rounded-md border border-border bg-surface/50">
         <Loader2 className="h-5 w-5 animate-spin text-subtle" />
@@ -20,18 +20,17 @@ export function PaeImage({ compoundId, sampleIndex }: PaeImageProps) {
     );
   }
 
-  if (pathQuery.isError || !pathQuery.data) {
+  if (imageQuery.isError || !imageQuery.data) {
     return (
       <div className="flex h-40 items-center justify-center rounded-md border border-dashed border-border bg-surface/50">
         <span className="text-xs text-faint">
-          {pathQuery.error?.message ?? 'PAE image not available'}
+          {imageQuery.error?.message ?? 'PAE image not available'}
         </span>
       </div>
     );
   }
 
-  // In Electron, local file:// URLs work in the renderer
-  const src = `file://${pathQuery.data}`;
+  const src = imageQuery.data;
 
   return (
     <img

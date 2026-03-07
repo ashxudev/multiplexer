@@ -133,8 +133,8 @@ function getMockResponse(path: string, input: unknown): unknown {
       return null;
     case 'compounds.getPoseCif':
       return 'data_mock\n_cell.length_a 50.0\n';
-    case 'compounds.getPaeImagePath':
-      return '/tmp/mock-pae.png';
+    case 'compounds.getPaeImageData':
+      return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
     default:
       console.warn(`[trpc mock] Unhandled path: ${path}`);
       return null;

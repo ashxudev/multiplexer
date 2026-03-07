@@ -3,6 +3,9 @@ import { Button } from '@/components/ui/button';
 import { trpc } from '@/api/trpc';
 import { useAppStore } from '@/stores/useAppStore';
 import { MoleculeImage } from './MoleculeImage';
+import { MolStarViewer } from './MolStarViewer';
+import { MolStarErrorBoundary } from './MolStarErrorBoundary';
+import { PaeImage } from './PaeImage';
 
 export function CompoundDetail({ compoundId }: { compoundId: string }) {
   const selectCompound = useAppStore((s) => s.selectCompound);
@@ -45,6 +48,16 @@ export function CompoundDetail({ compoundId }: { compoundId: string }) {
         {/* Molecule image */}
         <MoleculeImage smiles={c.smiles} className="h-40" />
 
+        {/* 3D Structure */}
+        {c.status === 'COMPLETED' && (
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">3D Structure</p>
+            <MolStarErrorBoundary>
+              <MolStarViewer compoundId={c.id} sampleIndex={0} />
+            </MolStarErrorBoundary>
+          </div>
+        )}
+
         {/* Status */}
         <div className="space-y-1">
           <p className="text-xs font-medium text-muted-foreground">Status</p>
@@ -70,6 +83,14 @@ export function CompoundDetail({ compoundId }: { compoundId: string }) {
               label="iPTM"
               value={c.metrics.samples[0].iptm}
             />
+          </div>
+        )}
+
+        {/* PAE Plot */}
+        {c.status === 'COMPLETED' && (
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">PAE Plot</p>
+            <PaeImage compoundId={c.id} sampleIndex={0} />
           </div>
         )}
 
