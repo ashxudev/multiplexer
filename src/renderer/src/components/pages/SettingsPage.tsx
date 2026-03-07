@@ -72,7 +72,7 @@ function GeneralSettings() {
   const testMutation = trpc.settings.testConnection.useMutation();
 
   const [apiKey, setApiKey] = useState(settings.data?.api_key ?? '');
-  const [showKey, setShowKey] = useState(!settings.data?.api_key);
+  const [showKey, setShowKey] = useState(false);
   const [verifyStatus, setVerifyStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle');
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
@@ -81,10 +81,14 @@ function GeneralSettings() {
   const userEditedRef = useRef(false);
 
   // Sync once when data first loads (skip auto-verify for saved key)
-  if (settings.data && !syncedRef.current && settings.data.api_key) {
+  if (settings.data && !syncedRef.current) {
     syncedRef.current = true;
-    setApiKey(settings.data.api_key);
-    setSaveStatus('saved');
+    if (settings.data.api_key) {
+      setApiKey(settings.data.api_key);
+      setSaveStatus('saved');
+    } else {
+      setShowKey(true);
+    }
   }
 
   // Auto-verify only on user edits
@@ -182,7 +186,7 @@ function GeneralSettings() {
         </div>
       </div>
 
-      <Button onClick={handleSave} size="sm" disabled={saveStatus !== 'idle' || !apiKey || verifyStatus === 'error'}>
+      <Button onClick={handleSave} size="sm" disabled={saveStatus !== 'idle' || !apiKey || verifyStatus === 'error' || saveMutation.isPending}>
         {saveStatus === 'saved' ? <><CheckCircle2 className="h-3.5 w-3.5" /> Saved</> : 'Save'}
       </Button>
     </div>

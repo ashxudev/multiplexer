@@ -227,7 +227,7 @@ export function Sidebar() {
   return (
     <aside className="flex h-full flex-col bg-sidebar">
       {/* Drag region + New Campaign */}
-      <div className="h-3 shrink-0 drag" />
+      <div className="h-3 shrink-0" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties} />
       <div className="px-3 pb-2">
         <button
           onClick={() => setView('new-campaign')}

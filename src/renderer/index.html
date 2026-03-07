@@ -1,11 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" style="background-color: #151110">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Multiplexer</title>
+    <script>
+      // Set background early to prevent flash. Matches useTheme.ts logic.
+      ;(function(){var t=localStorage.getItem('multiplexer-theme');var light=t==='light'||(t!=='dark'&&matchMedia('(prefers-color-scheme:light)').matches);document.documentElement.style.backgroundColor=light?'#fff':'#151110'})()
+    </script>
   </head>
-  <body style="background-color: #151110">
+  <body>
     <div id="root"></div>
     <script type="module" src="./src/main.tsx"></script>
   </body>
