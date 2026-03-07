@@ -40,7 +40,7 @@ function buildPath(text: string): { path: string; width: number } {
     col += w + 1; // 1-cell gap between characters
   }
 
-  return { path: parts.join(""), width: (col - 1) * CELL };
+  return { path: parts.join(""), width: Math.max(0, (col - 1) * CELL) };
 }
 
 interface PixelTextProps {

@@ -16,7 +16,7 @@ function createWindow(): BrowserWindow {
     minHeight: 600,
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 16, y: 16 },
-    backgroundColor: nativeTheme.shouldUseDarkColors ? '#252525' : '#ffffff',
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#151110' : '#ffffff',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
