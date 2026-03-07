@@ -57,14 +57,12 @@ export const settingsRouter = router({
       persistState(state.rootDir, state.data);
     }),
 
-  testConnection: publicProcedure.query(async ({ ctx }) => {
-    const { state, client } = ctx.services;
-    const apiKey = state.data.api_key;
-    if (!apiKey) {
-      throw new Error('No API key configured');
-    }
-    return client.testConnection(apiKey);
-  }),
+  testConnection: publicProcedure
+    .input(z.object({ apiKey: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const { client } = ctx.services;
+      return client.testConnection(input.apiKey);
+    }),
 
   selectRootDir: publicProcedure.mutation(async () => {
     const result = await dialog.showOpenDialog({

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ArrowLeft, Key, FolderOpen, Paintbrush, Sun, Moon, Monitor } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Key, FolderOpen, Paintbrush, Sun, Moon, Monitor, Eye, EyeOff, Loader2, CheckCircle2, XCircle, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,8 +11,8 @@ import { cn } from '@/lib/utils';
 type SettingsSection = 'general' | 'workspace' | 'appearance';
 
 const SECTIONS: { id: SettingsSection; label: string; icon: typeof Key }[] = [
-  { id: 'general', label: 'General', icon: Key },
-  { id: 'workspace', label: 'Workspace', icon: FolderOpen },
+  { id: 'general', label: 'API Key', icon: Key },
+  { id: 'workspace', label: 'Workspace Directory', icon: FolderOpen },
   { id: 'appearance', label: 'Appearance', icon: Paintbrush },
 ];
 
@@ -69,60 +69,121 @@ export function SettingsPage() {
 function GeneralSettings() {
   const settings = trpc.settings.get.useQuery();
   const saveMutation = trpc.settings.save.useMutation();
-  const testConnection = trpc.settings.testConnection.useQuery(undefined, {
-    enabled: false,
-  });
+  const testMutation = trpc.settings.testConnection.useMutation();
 
   const [apiKey, setApiKey] = useState(settings.data?.api_key ?? '');
-  const [testStatus, setTestStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [showKey, setShowKey] = useState(!settings.data?.api_key);
+  const [verifyStatus, setVerifyStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle');
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const nonceRef = useRef(0);
+  const syncedRef = useRef(false);
+  const userEditedRef = useRef(false);
 
-  // Sync when data loads
-  if (settings.data && apiKey === '' && settings.data.api_key) {
+  // Sync once when data first loads (skip auto-verify for saved key)
+  if (settings.data && !syncedRef.current && settings.data.api_key) {
+    syncedRef.current = true;
     setApiKey(settings.data.api_key);
+    setSaveStatus('saved');
   }
 
-  const handleSave = () => {
-    saveMutation.mutate({ apiKey: apiKey || null });
+  // Auto-verify only on user edits
+  useEffect(() => {
+    clearTimeout(debounceRef.current);
+
+    if (!userEditedRef.current) return;
+
+    if (!apiKey || apiKey.length < 8) {
+      setVerifyStatus('idle');
+      return;
+    }
+
+    const nonce = ++nonceRef.current;
+    setVerifyStatus('loading');
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const ok = await testMutation.mutateAsync({ apiKey });
+        if (nonce === nonceRef.current) {
+          setVerifyStatus(ok ? 'success' : 'error');
+        }
+      } catch {
+        if (nonce === nonceRef.current) {
+          setVerifyStatus('error');
+        }
+      }
+    }, 600);
+
+    return () => clearTimeout(debounceRef.current);
+  }, [apiKey]);
+
+  const handleRetry = () => {
+    userEditedRef.current = true;
+    // Bump nonce and re-trigger by toggling a verify cycle
+    const nonce = ++nonceRef.current;
+    setVerifyStatus('loading');
+    testMutation.mutateAsync({ apiKey }).then(
+      (ok) => { if (nonce === nonceRef.current) setVerifyStatus(ok ? 'success' : 'error'); },
+      () => { if (nonce === nonceRef.current) setVerifyStatus('error'); },
+    );
   };
 
-  const handleTest = async () => {
-    setTestStatus('loading');
-    try {
-      const result = await testConnection.refetch();
-      setTestStatus(result.data ? 'success' : 'error');
-    } catch {
-      setTestStatus('error');
-    }
+  const handleSave = () => {
+    saveMutation.mutate(
+      { apiKey: apiKey || null },
+      { onSuccess: () => setSaveStatus('saved') },
+    );
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold">General</h2>
-        <p className="text-sm text-muted-foreground">API keys and connection settings</p>
+        <h2 className="text-lg font-semibold">API Key</h2>
+        <p className="text-sm text-muted-foreground">
+          Connect to Boltz Lab for structure predictions.{' '}
+          <a
+            href="https://lab.boltz.bio"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-0.5 text-primary hover:underline"
+          >
+            Get an API key
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        </p>
       </div>
 
       <div className="space-y-2">
-        <Label>Boltz API Key</Label>
-        <Input
-          type="password"
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          placeholder="boltzpk_live_..."
-        />
+        <div className="flex items-center gap-2">
+          <Label>Boltz API Key</Label>
+          {verifyStatus === 'loading' && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+          {verifyStatus === 'success' && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+          {verifyStatus === 'error' && (
+            <button type="button" onClick={handleRetry} className="flex items-center gap-1 text-red-400 hover:text-red-300 transition-colors">
+              <XCircle className="h-3.5 w-3.5" />
+              <span className="text-xs">Retry</span>
+            </button>
+          )}
+        </div>
+        <div className="relative">
+          <Input
+            type={showKey ? 'text' : 'password'}
+            value={apiKey}
+            onChange={(e) => { setApiKey(e.target.value); setSaveStatus('idle'); userEditedRef.current = true; }}
+            placeholder="boltzpk_live_..."
+            className="pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowKey(!showKey)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {showKey ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+          </button>
+        </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <Button onClick={handleTest} variant="outline" size="sm" disabled={!apiKey}>
-          Test Connection
-        </Button>
-        {testStatus === 'loading' && <span className="text-xs text-muted-foreground">Testing...</span>}
-        {testStatus === 'success' && <span className="text-xs text-emerald-500">Connected</span>}
-        {testStatus === 'error' && <span className="text-xs text-red-400">Failed</span>}
-      </div>
-
-      <Button onClick={handleSave} disabled={saveMutation.isPending}>
-        {saveMutation.isPending ? 'Saving...' : 'Save'}
+      <Button onClick={handleSave} size="sm" disabled={saveStatus !== 'idle' || !apiKey || verifyStatus === 'error'}>
+        {saveStatus === 'saved' ? <><CheckCircle2 className="h-3.5 w-3.5" /> Saved</> : 'Save'}
       </Button>
     </div>
   );
@@ -148,7 +209,7 @@ function WorkspaceSettings() {
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold">Workspace</h2>
-        <p className="text-sm text-muted-foreground">Configure your workspace directory</p>
+        <p className="text-sm text-muted-foreground">Configure your local workspace directory</p>
       </div>
 
       <div className="space-y-2">
