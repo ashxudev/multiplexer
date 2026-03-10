@@ -47,7 +47,7 @@ export function humanizeError(err: unknown): string {
   // Fixed messages for auth and rate-limit errors
   if (statusCode === 401) return 'API key is invalid or expired. Check Settings.';
   if (statusCode === 403) return 'API key does not have permission. Check Settings.';
-  if (statusCode === 429) return 'Rate limited — the request will be retried automatically.';
+  if (statusCode === 429) return 'Boltz API rate limit reached. Please try again shortly.';
 
   // Server errors
   if (statusCode !== null && statusCode >= 500) {
