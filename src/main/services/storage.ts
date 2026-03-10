@@ -20,7 +20,7 @@ export function loadState(rootDir: string): AppState {
   const raw = fs.readFileSync(statePath, 'utf-8');
   const data: AppData = JSON.parse(raw);
 
-  if (data.schema_version > 2) {
+  if (data.schema_version > 3) {
     throw new Error(
       `Unsupported state schema version: ${data.schema_version}. Please update Multiplexer.`,
     );
@@ -44,6 +44,22 @@ export function loadState(rootDir: string): AppState {
       }
     }
     data.schema_version = 2;
+    migrated = true;
+  }
+
+  // Migrate v2 → v3: add target_type, rename protein_sequence → target_sequence
+  if (data.schema_version < 3) {
+    for (const campaign of data.campaigns) {
+      const c = campaign as Record<string, unknown>;
+      if (!c.target_type) {
+        c.target_type = 'protein';
+      }
+      if ('protein_sequence' in c && !('target_sequence' in c)) {
+        c.target_sequence = c.protein_sequence;
+        delete c.protein_sequence;
+      }
+    }
+    data.schema_version = 3;
     migrated = true;
   }
 

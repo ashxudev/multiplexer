@@ -128,9 +128,11 @@ export class Poller {
 
     switch (apiStatus) {
       case 'COMPLETED': {
+        const campaign = this.services.state.findCampaign(ref.campaign_id);
+        const targetType = campaign?.target_type ?? 'protein';
         let metrics: CompoundMetrics;
         try {
-          metrics = parseMetrics(prediction);
+          metrics = parseMetrics(prediction, targetType);
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
           console.warn(`Failed to parse metrics for ${ref.compound_id}: ${msg}`);

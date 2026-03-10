@@ -78,7 +78,7 @@ export const runsRouter = router({
         throw new Error('Cannot reach the Boltz API. Try again in a few minutes.', { cause: e });
       }
 
-      const proteinSequence = campaign.protein_sequence;
+      const targetSequence = campaign.target_sequence;
 
       // Generate unique run folder name
       const runBase = sanitiseFolderName(input.displayName);
@@ -152,7 +152,7 @@ export const runsRouter = router({
       const tasks = compounds.map((compound) =>
         limit(async () => {
           await waitForGate();
-          const inferenceInput = buildInferenceInput(proteinSequence, compound.smiles);
+          const inferenceInput = buildInferenceInput(targetSequence, compound.smiles, campaign.target_type);
           const inferenceOptions = buildInferenceOptions(input.params);
           const now = new Date().toISOString();
 

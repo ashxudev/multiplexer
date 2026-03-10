@@ -19,12 +19,34 @@ export const campaignsRouter = router({
     .input(
       z.object({
         displayName: z.string().min(1),
-        proteinSequence: z.string().min(1),
+        targetSequence: z.string().min(1),
+        targetType: z.enum(['protein', 'dna', 'rna']).default('protein'),
         description: z.string().nullable().optional(),
+      }).superRefine((val, ctx) => {
+        const seq = val.targetSequence.trim().toUpperCase();
+        const valid =
+          val.targetType === 'dna'
+            ? /^[ACGT]+$/.test(seq)
+            : val.targetType === 'rna'
+              ? /^[ACGU]+$/.test(seq)
+              : /^[A-Z]+$/.test(seq);
+        if (!valid) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['targetSequence'],
+            message:
+              val.targetType === 'dna'
+                ? 'DNA sequence must contain only A, C, G, and T.'
+                : val.targetType === 'rna'
+                  ? 'RNA sequence must contain only A, C, G, and U.'
+                  : 'Protein sequence must contain only amino acid letters.',
+          });
+        }
       }),
     )
     .mutation(({ ctx, input }) => {
       const { state } = ctx.services;
+      const targetSequence = input.targetSequence.trim().toUpperCase();
       const baseName = sanitiseFolderName(input.displayName);
       const existing = state.data.campaigns.map((c) => c.folder_name);
       const folderName = uniqueFolderName(baseName, existing);
@@ -33,7 +55,8 @@ export const campaignsRouter = router({
         id: uuidv4(),
         display_name: input.displayName,
         folder_name: folderName,
-        protein_sequence: input.proteinSequence,
+        target_sequence: targetSequence,
+        target_type: input.targetType,
         description: input.description ?? null,
         archived: false,
         archived_at: null,
