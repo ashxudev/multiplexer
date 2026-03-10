@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import {
   Panel,
   PanelGroup,
@@ -38,7 +38,15 @@ export function WorkspaceView() {
   const containerRef = useRef<HTMLDivElement>(null);
   const wasCollapsedOnDragStartRef = useRef(false);
 
+  const selectedCampaignId = useAppStore((s) => s.selectedCampaignId);
   const hasCampaigns = (campaigns.data?.length ?? 0) > 0;
+
+  // Resolve target type for the selected campaign (needed by ResultsTable)
+  const selectedTargetType = useMemo(() => {
+    if (!selectedCampaignId || !campaigns.data) return 'protein' as const;
+    const campaign = campaigns.data.find((c) => c.id === selectedCampaignId);
+    return campaign?.target_type ?? 'protein';
+  }, [selectedCampaignId, campaigns.data]);
 
   // Sync store → panel for programmatic toggle (Cmd+B)
   useEffect(() => {
@@ -136,7 +144,7 @@ export function WorkspaceView() {
             {!hasCampaigns ? (
               <OnboardingCard />
             ) : selectedRunId ? (
-              <ResultsTable runId={selectedRunId} />
+              <ResultsTable runId={selectedRunId} targetType={selectedTargetType} />
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
                 Select a run to view results

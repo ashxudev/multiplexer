@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -47,6 +48,7 @@ export function NewRunPage() {
   const [smilesText, setSmilesText] = useState('');
   const [inputMode, setInputMode] = useState<'paste' | 'csv'>('paste');
   const [error, setError] = useState<string | null>(null);
+  const [paramsOpen, setParamsOpen] = useState(false);
 
   // Parameters
   const [recyclingSteps, setRecyclingSteps] = useState(3);
@@ -155,13 +157,24 @@ export function NewRunPage() {
           />
         </div>
 
-        {/* Protein sequence (read-only) */}
+        {/* Target sequence (read-only) */}
         <div className="space-y-2">
-          <Label>Protein Sequence</Label>
+          <Label>
+            {campaign.target_type === 'dna' ? 'DNA' : campaign.target_type === 'rna' ? 'RNA' : 'Protein'} Sequence
+          </Label>
           <div className="rounded-md border border-border bg-muted px-3 py-2 text-sm font-mono text-muted-foreground max-h-24 overflow-auto">
             {campaign.protein_sequence}
           </div>
         </div>
+
+        {campaign.target_type !== 'protein' && (
+          <div className="rounded-md border border-blue-900/50 bg-blue-950/30 p-3">
+            <p className="text-xs text-blue-400">
+              This campaign targets {campaign.target_type.toUpperCase()}. Affinity metrics
+              (binding confidence, optimization score) will not be available for these predictions.
+            </p>
+          </div>
+        )}
 
         {/* SMILES input */}
         <div className="space-y-2">
@@ -212,13 +225,23 @@ export function NewRunPage() {
           )}
         </div>
 
-        {/* Parameters */}
+        {/* Advanced Parameters (collapsed by default) */}
         <div className="space-y-4">
-          <h3 className="text-sm font-medium">Prediction Parameters</h3>
-          <ParamSlider label="Recycling Steps" value={recyclingSteps} onChange={setRecyclingSteps} min={1} max={10} step={1} tooltip="Number of recycling iterations for structure refinement. Higher values may improve accuracy but increase compute time." />
-          <ParamSlider label="Diffusion Samples" value={diffusionSamples} onChange={setDiffusionSamples} min={1} max={10} step={1} tooltip="Number of independent structure samples to generate. More samples give broader exploration of possible binding poses." />
-          <ParamSlider label="Sampling Steps" value={samplingSteps} onChange={setSamplingSteps} min={50} max={500} step={50} tooltip="Number of diffusion steps per sample. More steps generally produce higher quality structures." />
-          <ParamSlider label="Step Scale" value={stepScale} onChange={setStepScale} min={0.5} max={3.0} step={0.1} tooltip="Scaling factor for the diffusion step size. Higher values increase structural diversity at the cost of precision." />
+          <button
+            onClick={() => setParamsOpen((s) => !s)}
+            className="flex items-center gap-1.5 text-sm font-medium hover:text-foreground transition-colors"
+          >
+            <ChevronRight className={cn("h-3.5 w-3.5 transition-transform", paramsOpen && "rotate-90")} />
+            Advanced Parameters
+          </button>
+          {paramsOpen && (
+            <div className="space-y-4 pl-5">
+              <ParamSlider label="Recycling Steps" value={recyclingSteps} onChange={setRecyclingSteps} min={1} max={10} step={1} tooltip="Number of iterative refinement passes — the model feeds its output back as input to improve prediction accuracy." />
+              <ParamSlider label="Diffusion Samples" value={diffusionSamples} onChange={setDiffusionSamples} min={1} max={10} step={1} tooltip="Number of independent structure predictions to generate, each from different random noise. Higher values explore more conformations but cost more compute." />
+              <ParamSlider label="Sampling Steps" value={samplingSteps} onChange={setSamplingSteps} min={50} max={500} step={50} tooltip="Number of denoising steps in the diffusion process. More steps = higher quality predictions but slower." />
+              <ParamSlider label="Step Scale" value={stepScale} onChange={setStepScale} min={0.5} max={3.0} step={0.1} tooltip="Diffusion temperature scaling. Lower values produce more diverse samples, higher values are more conservative. Recommended range: 1–2." />
+            </div>
+          )}
         </div>
 
         {error && (

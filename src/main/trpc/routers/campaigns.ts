@@ -20,6 +20,7 @@ export const campaignsRouter = router({
       z.object({
         displayName: z.string().min(1),
         proteinSequence: z.string().min(1),
+        targetType: z.enum(['protein', 'dna', 'rna']).default('protein'),
         description: z.string().nullable().optional(),
       }),
     )
@@ -34,6 +35,7 @@ export const campaignsRouter = router({
         display_name: input.displayName,
         folder_name: folderName,
         protein_sequence: input.proteinSequence,
+        target_type: input.targetType,
         description: input.description ?? null,
         archived: false,
         archived_at: null,

@@ -7,9 +7,11 @@ import { getMetricColorClass } from '@/lib/metric-colors';
 
 type SortColumn = 'status' | 'compound' | 'confidence' | 'ligand_iptm' | 'binding_confidence';
 
-export function ResultsTable({ runId }: { runId: string }) {
+export function ResultsTable({ runId, targetType = 'protein' }: { runId: string; targetType?: string }) {
   const run = trpc.runs.get.useQuery({ runId });
   const selectCompound = useAppStore((s) => s.selectCompound);
+
+  const showAffinity = targetType === 'protein';
 
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
@@ -90,7 +92,9 @@ export function ResultsTable({ runId }: { runId: string }) {
             <th className="px-4 py-2 text-left font-medium text-muted-foreground">SMILES</th>
             <SortHeader column="confidence" label="Confidence" align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
             <SortHeader column="ligand_iptm" label="Ligand iPTM" align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
-            <SortHeader column="binding_confidence" label="Binding Conf." align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
+            {showAffinity && (
+              <SortHeader column="binding_confidence" label="Binding Conf." align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
+            )}
           </tr>
         </thead>
         <tbody>
@@ -118,9 +122,11 @@ export function ResultsTable({ runId }: { runId: string }) {
                 <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(ligandIptm))}>
                   {ligandIptm != null ? ligandIptm.toFixed(3) : '—'}
                 </td>
-                <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(bindingConf))}>
-                  {bindingConf != null ? bindingConf.toFixed(3) : '—'}
-                </td>
+                {showAffinity && (
+                  <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(bindingConf))}>
+                    {bindingConf != null ? bindingConf.toFixed(3) : '—'}
+                  </td>
+                )}
               </tr>
             );
           })}

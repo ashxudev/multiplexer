@@ -151,7 +151,7 @@ export const runsRouter = router({
       const tasks = compounds.map((compound) =>
         limit(async () => {
           await waitForGate();
-          const inferenceInput = buildInferenceInput(proteinSequence, compound.smiles);
+          const inferenceInput = buildInferenceInput(proteinSequence, compound.smiles, campaign.target_type);
           const inferenceOptions = buildInferenceOptions(input.params);
           const now = new Date().toISOString();
 

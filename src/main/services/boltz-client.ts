@@ -6,6 +6,7 @@ import type {
   SubmitResponse,
   PredictionStatus,
   RunParams,
+  TargetType,
 } from '../models/types';
 import {
   BOLTZ_BASE_URL,
@@ -254,31 +255,30 @@ export class BoltzClient {
 /**
  * Build inference input for the Boltz API.
  * Returns a JSON object with version and sequences array.
+ * Target type determines the entity key (protein/dna/rna) and whether
+ * affinity properties are requested (protein-only).
  */
 export function buildInferenceInput(
-  proteinSequence: string,
+  sequence: string,
   smiles: string,
+  targetType: TargetType = 'protein',
   ligandChainId: string = 'B',
 ): unknown {
-  return {
+  const payload: Record<string, unknown> = {
     // version field is ignored by API as of Mar 2026, kept for forward-compat
     version: 2,
     sequences: [
-      {
-        protein: {
-          id: 'A',
-          sequence: proteinSequence,
-        },
-      },
-      {
-        ligand: {
-          id: ligandChainId,
-          smiles,
-        },
-      },
+      { [targetType]: { id: 'A', sequence } },
+      { ligand: { id: ligandChainId, smiles } },
     ],
-    properties: [{ affinity: { binder: ligandChainId } }],
   };
+
+  // Affinity metrics are only supported for protein targets
+  if (targetType === 'protein') {
+    payload.properties = [{ affinity: { binder: ligandChainId } }];
+  }
+
+  return payload;
 }
 
 // ── Inference options builder ────────────────────────────────────────
