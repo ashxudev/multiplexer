@@ -47,11 +47,16 @@ export function loadState(rootDir: string): AppState {
     migrated = true;
   }
 
-  // Migrate v2 → v3: add target_type to campaigns
+  // Migrate v2 → v3: add target_type, rename protein_sequence → target_sequence
   if (data.schema_version < 3) {
     for (const campaign of data.campaigns) {
-      if (!(campaign as Record<string, unknown>).target_type) {
-        (campaign as Record<string, unknown>).target_type = 'protein';
+      const c = campaign as Record<string, unknown>;
+      if (!c.target_type) {
+        c.target_type = 'protein';
+      }
+      if ('protein_sequence' in c && !('target_sequence' in c)) {
+        c.target_sequence = c.protein_sequence;
+        delete c.protein_sequence;
       }
     }
     data.schema_version = 3;

@@ -78,7 +78,7 @@ export const compoundsRouter = router({
       state.markDirty();
 
       // Submit
-      const inferenceInput = buildInferenceInput(campaign.protein_sequence, compound.smiles, campaign.target_type);
+      const inferenceInput = buildInferenceInput(campaign.target_sequence, compound.smiles, campaign.target_type);
       const inferenceOptions = buildInferenceOptions(run.params);
       const now = new Date().toISOString();
 

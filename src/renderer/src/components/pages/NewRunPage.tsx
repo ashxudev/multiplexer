@@ -163,7 +163,7 @@ export function NewRunPage() {
             {campaign.target_type === 'dna' ? 'DNA' : campaign.target_type === 'rna' ? 'RNA' : 'Protein'} Sequence
           </Label>
           <div className="rounded-md border border-border bg-muted px-3 py-2 text-sm font-mono text-muted-foreground max-h-24 overflow-auto">
-            {campaign.protein_sequence}
+            {campaign.target_sequence}
           </div>
         </div>
 

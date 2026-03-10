@@ -103,7 +103,7 @@ export function NewCampaignPage() {
     try {
       const campaign = await createMutation.mutateAsync({
         displayName: name.trim(),
-        proteinSequence: cleaned,
+        targetSequence: cleaned,
         targetType,
         description: description.trim() || null,
       });

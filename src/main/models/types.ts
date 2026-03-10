@@ -12,7 +12,7 @@ export interface Campaign {
   id: string; // UUID
   display_name: string;
   folder_name: string;
-  protein_sequence: string;
+  target_sequence: string;
   target_type: TargetType;
   description: string | null;
   archived: boolean;
