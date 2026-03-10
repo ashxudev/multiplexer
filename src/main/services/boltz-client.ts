@@ -19,7 +19,7 @@ import {
 
 // ── Error helpers ────────────────────────────────────────────────────
 
-class BoltzApiError extends Error {
+export class BoltzApiError extends Error {
   readonly statusCode: number | null;
   readonly retryAfterMs: number | null;
 
@@ -222,9 +222,9 @@ export class BoltzClient {
   }
 
   /**
-   * GET /api/v1/connect/predictions?limit=1 -- returns true if 2xx
+   * GET /api/v1/connect/predictions?limit=1 -- throws on non-2xx
    */
-  async testConnection(apiKey: string): Promise<boolean> {
+  async testConnection(apiKey: string): Promise<true> {
     const url = `${this.baseUrl}/api/v1/connect/predictions?limit=1`;
 
     return this.withRetry(async () => {
@@ -236,7 +236,15 @@ export class BoltzClient {
         signal: AbortSignal.timeout(HTTP_TIMEOUT_MS),
       });
 
-      return resp.ok;
+      if (!resp.ok) {
+        const text = await resp.text().catch(() => '');
+        throw new BoltzApiError(
+          `Connection test failed (${resp.status}): ${text}`,
+          resp.status,
+        );
+      }
+
+      return true;
     });
   }
 }

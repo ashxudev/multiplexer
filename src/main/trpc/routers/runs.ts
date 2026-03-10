@@ -11,6 +11,7 @@ import {
   persistState,
 } from '../../services/storage';
 import {
+  BoltzApiError,
   buildInferenceInput,
   buildInferenceOptions,
 } from '../../services/boltz-client';
@@ -53,13 +54,28 @@ export const runsRouter = router({
         params: runParamsSchema,
       }),
     )
-    .mutation(({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { state, client, eventBus } = ctx.services;
       const campaign = state.findCampaign(input.campaignId);
       if (!campaign) throw new Error('Campaign not found');
 
       const apiKey = state.data.api_key;
       if (!apiKey) throw new Error('No API key configured');
+
+      // Pre-flight: verify API key before creating the run
+      try {
+        await client.testConnection(apiKey);
+      } catch (e) {
+        if (e instanceof BoltzApiError) {
+          if (e.statusCode === 401 || e.statusCode === 403) {
+            throw new Error('API key is invalid or expired. Check Settings.', { cause: e });
+          }
+          if (e.statusCode === 429) {
+            throw new Error('Boltz API rate limit reached. Try again in a few minutes.', { cause: e });
+          }
+        }
+        throw new Error('Cannot reach the Boltz API. Try again in a few minutes.', { cause: e });
+      }
 
       const proteinSequence = campaign.protein_sequence;
 
