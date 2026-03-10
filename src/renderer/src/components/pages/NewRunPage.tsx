@@ -75,6 +75,7 @@ export function NewRunPage() {
   }, [rdkit, rdkitReady, compounds]);
 
   const hasInvalidSmiles = invalidIndices.size > 0;
+  const validationPending = compounds.length > 0 && !rdkitReady;
 
   const validationErrors = useMemo(() => {
     if (!hasInvalidSmiles) return undefined;
@@ -83,7 +84,7 @@ export function NewRunPage() {
   }, [hasInvalidSmiles, invalidIndices.size]);
 
   const handleSubmit = async () => {
-    if (!runName.trim() || compounds.length === 0 || !selectedCampaignId || hasInvalidSmiles) return;
+    if (!runName.trim() || compounds.length === 0 || !selectedCampaignId || hasInvalidSmiles || validationPending) return;
 
     setError(null);
     try {
@@ -229,13 +230,15 @@ export function NewRunPage() {
         <div className="flex justify-end">
           <Button
             onClick={handleSubmit}
-            disabled={!runName.trim() || compounds.length === 0 || hasInvalidSmiles || createMutation.isPending}
+            disabled={!runName.trim() || compounds.length === 0 || hasInvalidSmiles || validationPending || createMutation.isPending}
           >
             {createMutation.isPending
               ? 'Submitting...'
-              : hasInvalidSmiles
-                ? `${invalidIndices.size} Invalid SMILES`
-                : 'Submit'}
+              : validationPending
+                ? 'Validating…'
+                : hasInvalidSmiles
+                  ? `${invalidIndices.size} Invalid SMILES`
+                  : 'Submit'}
           </Button>
         </div>
       </div>
