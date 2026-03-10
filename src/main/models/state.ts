@@ -21,7 +21,7 @@ export class AppState {
 
   static defaultData(): AppData {
     return {
-      schema_version: 2,
+      schema_version: 3,
       api_key: null,
       campaigns: [],
     };

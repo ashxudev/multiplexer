@@ -1,7 +1,9 @@
 // ── Core Data Types ─────────────────────────────────────────────────
 
+export type TargetType = 'protein' | 'dna' | 'rna';
+
 export interface AppData {
-  schema_version: number; // Currently 2
+  schema_version: number; // Currently 3
   api_key: string | null;
   campaigns: Campaign[];
 }
@@ -10,7 +12,8 @@ export interface Campaign {
   id: string; // UUID
   display_name: string;
   folder_name: string;
-  protein_sequence: string;
+  target_sequence: string;
+  target_type: TargetType;
   description: string | null;
   archived: boolean;
   archived_at: string | null; // ISO 8601

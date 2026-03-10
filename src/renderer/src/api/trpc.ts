@@ -17,7 +17,7 @@ const MOCK_CAMPAIGNS = [
     id: 'mock-campaign-1',
     display_name: 'EGFR Inhibitor Screen',
     folder_name: 'egfr-inhibitor-screen',
-    protein_sequence: 'MTEYKLVVVGAGGVGKSALTIQLIQNHFVDEYDPTIEDSY',
+    target_sequence: 'MTEYKLVVVGAGGVGKSALTIQLIQNHFVDEYDPTIEDSY',
     description: 'Testing EGFR binding candidates',
     archived: false,
     archived_at: null,
