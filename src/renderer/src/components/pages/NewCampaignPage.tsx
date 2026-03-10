@@ -94,6 +94,7 @@ export function NewCampaignPage() {
       return;
     }
     const validationError = validateSequence(cleaned, targetType);
+    setSequenceError(validationError);
     if (validationError) {
       setError(validationError);
       return;

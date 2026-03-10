@@ -228,14 +228,17 @@ export function NewRunPage() {
         {/* Advanced Parameters (collapsed by default) */}
         <div className="space-y-4">
           <button
+            type="button"
             onClick={() => setParamsOpen((s) => !s)}
+            aria-expanded={paramsOpen}
+            aria-controls="advanced-parameters"
             className="flex items-center gap-1.5 text-sm font-medium hover:text-foreground transition-colors"
           >
             <ChevronRight className={cn("h-3.5 w-3.5 transition-transform", paramsOpen && "rotate-90")} />
             Advanced Parameters
           </button>
           {paramsOpen && (
-            <div className="space-y-4 pl-5">
+            <div id="advanced-parameters" className="space-y-4 pl-5">
               <ParamSlider label="Recycling Steps" value={recyclingSteps} onChange={setRecyclingSteps} min={1} max={10} step={1} tooltip="Number of iterative refinement passes — the model feeds its output back as input to improve prediction accuracy." />
               <ParamSlider label="Diffusion Samples" value={diffusionSamples} onChange={setDiffusionSamples} min={1} max={10} step={1} tooltip="Number of independent structure predictions to generate, each from different random noise. Higher values explore more conformations but cost more compute." />
               <ParamSlider label="Sampling Steps" value={samplingSteps} onChange={setSamplingSteps} min={50} max={500} step={50} tooltip="Number of denoising steps in the diffusion process. More steps = higher quality predictions but slower." />

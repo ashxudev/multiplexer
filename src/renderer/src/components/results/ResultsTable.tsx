@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { trpc } from '@/api/trpc';
 import { useAppStore } from '@/stores/useAppStore';
@@ -15,6 +15,12 @@ export function ResultsTable({ runId, targetType = 'protein' }: { runId: string;
 
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  useEffect(() => {
+    if (!showAffinity && sortColumn === 'binding_confidence') {
+      setSortColumn(null);
+    }
+  }, [showAffinity, sortColumn]);
 
   const sortedCompounds = useMemo(() => {
     const compounds = run.data?.compounds ?? [];

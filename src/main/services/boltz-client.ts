@@ -302,7 +302,7 @@ function getNumber(obj: Record<string, unknown>, key: string): number | null {
 /**
  * Parse compound metrics from the prediction status response.
  */
-export function parseMetrics(prediction: PredictionStatus): CompoundMetrics {
+export function parseMetrics(prediction: PredictionStatus, targetType: TargetType = 'protein'): CompoundMetrics {
   const results = prediction.prediction_results;
   if (!results) {
     throw new Error('No prediction results');
@@ -330,7 +330,7 @@ export function parseMetrics(prediction: PredictionStatus): CompoundMetrics {
       binding_confidence: affinityJson['binding_confidence'],
       optimization_score: affinityJson['optimization_score'],
     };
-  } else {
+  } else if (targetType === 'protein') {
     console.warn('Prediction completed without affinity metrics — was properties.affinity included in the submission?');
   }
 

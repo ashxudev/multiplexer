@@ -22,6 +22,26 @@ export const campaignsRouter = router({
         targetSequence: z.string().min(1),
         targetType: z.enum(['protein', 'dna', 'rna']).default('protein'),
         description: z.string().nullable().optional(),
+      }).superRefine((val, ctx) => {
+        const seq = val.targetSequence.trim().toUpperCase();
+        const valid =
+          val.targetType === 'dna'
+            ? /^[ACGT]+$/.test(seq)
+            : val.targetType === 'rna'
+              ? /^[ACGU]+$/.test(seq)
+              : /^[A-Z]+$/.test(seq);
+        if (!valid) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['targetSequence'],
+            message:
+              val.targetType === 'dna'
+                ? 'DNA sequence must contain only A, C, G, and T.'
+                : val.targetType === 'rna'
+                  ? 'RNA sequence must contain only A, C, G, and U.'
+                  : 'Protein sequence must contain only amino acid letters.',
+          });
+        }
       }),
     )
     .mutation(({ ctx, input }) => {
