@@ -46,6 +46,7 @@ export const campaignsRouter = router({
     )
     .mutation(({ ctx, input }) => {
       const { state } = ctx.services;
+      const targetSequence = input.targetSequence.trim().toUpperCase();
       const baseName = sanitiseFolderName(input.displayName);
       const existing = state.data.campaigns.map((c) => c.folder_name);
       const folderName = uniqueFolderName(baseName, existing);
@@ -54,7 +55,7 @@ export const campaignsRouter = router({
         id: uuidv4(),
         display_name: input.displayName,
         folder_name: folderName,
-        target_sequence: input.targetSequence,
+        target_sequence: targetSequence,
         target_type: input.targetType,
         description: input.description ?? null,
         archived: false,
