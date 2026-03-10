@@ -198,4 +198,6 @@ export const HTTP_TIMEOUT_MS = 30_000; // 30 seconds
 export const RETRY_ATTEMPTS = 3;
 export const RETRY_BACKOFF_MS = [1000, 2000];
 export const RETRY_JITTER_MS = 500;
+export const RETRY_ATTEMPTS_RATE_LIMIT = 6;
+export const RATE_LIMIT_FALLBACK_MS = 30_000; // when no Retry-After header
 export const BOLTZ_BASE_URL = 'https://lab.boltz.bio';
