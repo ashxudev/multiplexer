@@ -1,3 +1,4 @@
+import { AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ParsedCompound {
@@ -8,9 +9,10 @@ interface ParsedCompound {
 interface CsvPreviewTableProps {
   compounds: ParsedCompound[];
   errors?: string[];
+  invalidIndices?: Set<number>;
 }
 
-export function CsvPreviewTable({ compounds, errors }: CsvPreviewTableProps) {
+export function CsvPreviewTable({ compounds, errors, invalidIndices }: CsvPreviewTableProps) {
   return (
     <div className="space-y-2">
       {errors && errors.length > 0 && (
@@ -35,13 +37,28 @@ export function CsvPreviewTable({ compounds, errors }: CsvPreviewTableProps) {
                 key={i}
                 className={cn(
                   "border-t border-border/50",
-                  i % 2 === 0 ? "bg-background" : "bg-surface/30"
+                  invalidIndices?.has(i)
+                    ? "bg-red-950/30"
+                    : i % 2 === 0
+                      ? "bg-background"
+                      : "bg-surface/30"
                 )}
               >
                 <td className="px-3 py-1 tabular-nums text-faint">{i + 1}</td>
                 <td className="px-3 py-1 text-dim">{c.name}</td>
-                <td className="max-w-[200px] truncate px-3 py-1 font-mono text-subtle" title={c.smiles}>
-                  {c.smiles}
+                <td
+                  className={cn(
+                    "max-w-[200px] truncate px-3 py-1 font-mono text-subtle",
+                    invalidIndices?.has(i) && "text-red-400"
+                  )}
+                  title={c.smiles}
+                >
+                  <span className="flex items-center gap-1">
+                    {invalidIndices?.has(i) && (
+                      <AlertTriangle className="h-3 w-3 shrink-0 text-red-400" />
+                    )}
+                    <span className="truncate">{c.smiles}</span>
+                  </span>
                 </td>
               </tr>
             ))}
