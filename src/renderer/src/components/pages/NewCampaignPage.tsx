@@ -7,6 +7,25 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAppStore } from '@/stores/useAppStore';
 import { trpc } from '@/api/trpc';
 
+function stripFasta(input: string): string {
+  return input
+    .split('\n')
+    .filter((l) => !l.startsWith('>'))
+    .map((l) => l.trim())
+    .join('');
+}
+
+const AMINO_ACIDS_RE = /^[ACDEFGHIKLMNPQRSTVWY]+$/i;
+
+function validateSequence(seq: string): string | null {
+  if (!seq) return null;
+  if (!AMINO_ACIDS_RE.test(seq)) {
+    const invalid = [...new Set(seq.match(/[^ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy]/g))];
+    return `Invalid characters: ${invalid.join(', ')}. Only standard amino acid letters are allowed.`;
+  }
+  return null;
+}
+
 export function NewCampaignPage() {
   const setView = useAppStore((s) => s.setView);
   const selectCampaign = useAppStore((s) => s.selectCampaign);
@@ -23,11 +42,22 @@ export function NewCampaignPage() {
   const handleCreate = async () => {
     if (!name.trim() || !sequence.trim()) return;
 
+    const cleaned = stripFasta(sequence);
+    if (!cleaned) {
+      setError('No sequence found. If pasting FASTA, include sequence lines below the header.');
+      return;
+    }
+    const validationError = validateSequence(cleaned);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setError(null);
     try {
       const campaign = await createMutation.mutateAsync({
         displayName: name.trim(),
-        proteinSequence: sequence.trim(),
+        proteinSequence: cleaned,
         description: description.trim() || null,
       });
 
@@ -68,7 +98,11 @@ export function NewCampaignPage() {
           <Textarea
             value={sequence}
             onChange={(e) => setSequence(e.target.value)}
-            placeholder="MTEYKLVVVG..."
+            onBlur={() => {
+              const cleaned = stripFasta(sequence);
+              if (cleaned !== sequence) setSequence(cleaned);
+            }}
+            placeholder="Paste sequence or FASTA format (headers will be stripped)..."
             rows={6}
             className="font-mono text-sm"
           />
