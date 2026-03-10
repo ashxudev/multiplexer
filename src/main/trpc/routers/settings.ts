@@ -61,7 +61,12 @@ export const settingsRouter = router({
     .input(z.object({ apiKey: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       const { client } = ctx.services;
-      return client.testConnection(input.apiKey);
+      try {
+        await client.testConnection(input.apiKey);
+        return true;
+      } catch {
+        return false;
+      }
     }),
 
   selectRootDir: publicProcedure.mutation(async () => {
