@@ -8,6 +8,7 @@ import {
   buildInferenceInput,
   buildInferenceOptions,
 } from '../../services/boltz-client';
+import { humanizeError } from '../../services/humanize-error';
 import type {
   CompoundStatusEvent,
   CompoundFilesReadyEvent,
@@ -99,7 +100,7 @@ export const compoundsRouter = router({
           completed_at: null,
         } satisfies CompoundStatusEvent);
       } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
+        const msg = humanizeError(e);
         compound.status = 'FAILED';
         compound.completed_at = now;
         compound.error_message = msg;

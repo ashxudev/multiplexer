@@ -15,6 +15,7 @@ import {
   buildInferenceInput,
   buildInferenceOptions,
 } from '../../services/boltz-client';
+import { humanizeError } from '../../services/humanize-error';
 import type {
   Compound,
   Run,
@@ -182,8 +183,8 @@ export const runsRouter = router({
             };
             eventBus.emit('compound-status-changed', evt);
           } catch (e) {
-            const msg = e instanceof Error ? e.message : String(e);
-            console.error(`Failed to submit compound ${compound.id}: ${msg}`);
+            const msg = humanizeError(e);
+            console.error(`Failed to submit compound ${compound.id}:`, e);
 
             const liveCompound = state.findCompound(compound.id);
             if (liveCompound) {
