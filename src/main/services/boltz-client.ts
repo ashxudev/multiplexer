@@ -5,7 +5,6 @@ import type {
   SampleMetrics,
   SubmitResponse,
   PredictionStatus,
-  PredictionListResponse,
   RunParams,
 } from '../models/types';
 import {
@@ -121,13 +120,13 @@ export class BoltzClient {
   }
 
   /**
-   * GET /api/v1/connect/predictions?predictionId={predictionId}
+   * GET /api/v1/connect/predictions/{predictionId}
    */
   async getPredictionStatus(
     apiKey: string,
     predictionId: string,
   ): Promise<PredictionStatus> {
-    const url = `${this.baseUrl}/api/v1/connect/predictions?predictionId=${encodeURIComponent(predictionId)}`;
+    const url = `${this.baseUrl}/api/v1/connect/predictions/${encodeURIComponent(predictionId)}`;
 
     return this.withRetry(async () => {
       const resp = await fetch(url, {
@@ -139,6 +138,12 @@ export class BoltzClient {
       });
 
       if (!resp.ok) {
+        if (resp.status === 404) {
+          throw new BoltzApiError(
+            `Prediction ${predictionId} not found`,
+            404,
+          );
+        }
         const text = await resp.text().catch(() => '');
         throw new BoltzApiError(
           `Status check failed (${resp.status}): ${text}`,
@@ -146,12 +151,7 @@ export class BoltzClient {
         );
       }
 
-      const list = (await resp.json()) as PredictionListResponse;
-      const prediction = list.predictions.find((p) => p.prediction_id === predictionId);
-      if (!prediction) {
-        throw new BoltzApiError(`Prediction ${predictionId} not found`);
-      }
-      return prediction;
+      return (await resp.json()) as PredictionStatus;
     });
   }
 
@@ -206,6 +206,7 @@ export function buildInferenceInput(
   ligandChainId: string = 'B',
 ): unknown {
   return {
+    // version field is ignored by API as of Mar 2026, kept for forward-compat
     version: 2,
     sequences: [
       {
@@ -221,6 +222,7 @@ export function buildInferenceInput(
         },
       },
     ],
+    properties: [{ affinity: { binder: ligandChainId } }],
   };
 }
 
@@ -261,18 +263,21 @@ export function parseMetrics(prediction: PredictionStatus): CompoundMetrics {
     throw new Error('No metrics in output');
   }
 
-  // Parse affinity metrics (optional — not present in all API versions)
+  // Parse affinity metrics (only present when submission includes properties.affinity)
   const affinityJson = metricsJson['affinity'] as Record<string, unknown> | undefined;
-  const affinity: AffinityMetrics = {
-    binding_confidence:
-      typeof affinityJson?.['binding_confidence'] === 'number'
-        ? affinityJson['binding_confidence']
-        : 0,
-    optimization_score:
-      typeof affinityJson?.['optimization_score'] === 'number'
-        ? affinityJson['optimization_score']
-        : 0,
-  };
+  let affinity: AffinityMetrics | null = null;
+  if (
+    affinityJson &&
+    typeof affinityJson['binding_confidence'] === 'number' &&
+    typeof affinityJson['optimization_score'] === 'number'
+  ) {
+    affinity = {
+      binding_confidence: affinityJson['binding_confidence'],
+      optimization_score: affinityJson['optimization_score'],
+    };
+  } else {
+    console.warn('Prediction completed without affinity metrics — was properties.affinity included in the submission?');
+  }
 
   // Parse sample results — API returns an object keyed by sample name (e.g. "sample_0")
   const sampleResults = metricsJson['sample_results'];
@@ -296,6 +301,8 @@ export function parseMetrics(prediction: PredictionStatus): CompoundMetrics {
     complex_iplddt: getNumber(s, 'complex_iplddt'),
     complex_pde: getNumber(s, 'complex_pde'),
     complex_ipde: getNumber(s, 'complex_ipde'),
+    chains_ptm: (s['chains_ptm'] as Record<string, number>) ?? null,
+    pair_chains_iptm: (s['pair_chains_iptm'] as Record<string, Record<string, number>>) ?? null,
   }));
 
   return { affinity, samples };

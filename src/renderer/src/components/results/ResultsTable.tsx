@@ -5,7 +5,7 @@ import { useAppStore } from '@/stores/useAppStore';
 import { cn } from '@/lib/utils';
 import { getMetricColorClass } from '@/lib/metric-colors';
 
-type SortColumn = 'status' | 'compound' | 'confidence' | 'ligand_iptm';
+type SortColumn = 'status' | 'compound' | 'confidence' | 'ligand_iptm' | 'binding_confidence';
 
 export function ResultsTable({ runId }: { runId: string }) {
   const run = trpc.runs.get.useQuery({ runId });
@@ -38,6 +38,10 @@ export function ResultsTable({ runId }: { runId: string }) {
         case 'ligand_iptm':
           aVal = a.metrics?.samples[0]?.ligand_iptm ?? null;
           bVal = b.metrics?.samples[0]?.ligand_iptm ?? null;
+          break;
+        case 'binding_confidence':
+          aVal = a.metrics?.affinity?.binding_confidence ?? null;
+          bVal = b.metrics?.affinity?.binding_confidence ?? null;
           break;
       }
 
@@ -86,12 +90,14 @@ export function ResultsTable({ runId }: { runId: string }) {
             <th className="px-4 py-2 text-left font-medium text-muted-foreground">SMILES</th>
             <SortHeader column="confidence" label="Confidence" align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
             <SortHeader column="ligand_iptm" label="Ligand iPTM" align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
+            <SortHeader column="binding_confidence" label="Binding Conf." align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
           </tr>
         </thead>
         <tbody>
           {sortedCompounds.map((compound) => {
             const confidence = compound.metrics?.samples[0]?.structure_confidence ?? null;
             const ligandIptm = compound.metrics?.samples[0]?.ligand_iptm ?? null;
+            const bindingConf = compound.metrics?.affinity?.binding_confidence ?? null;
 
             return (
               <tr
@@ -111,6 +117,9 @@ export function ResultsTable({ runId }: { runId: string }) {
                 </td>
                 <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(ligandIptm))}>
                   {ligandIptm != null ? ligandIptm.toFixed(3) : '—'}
+                </td>
+                <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(bindingConf))}>
+                  {bindingConf != null ? bindingConf.toFixed(3) : '—'}
                 </td>
               </tr>
             );

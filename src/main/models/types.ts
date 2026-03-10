@@ -1,7 +1,7 @@
 // ── Core Data Types ─────────────────────────────────────────────────
 
 export interface AppData {
-  schema_version: number; // Currently 1
+  schema_version: number; // Currently 2
   api_key: string | null;
   campaigns: Campaign[];
 }
@@ -81,7 +81,7 @@ export function isTerminal(status: JobStatus): boolean {
 // ── Metrics ─────────────────────────────────────────────────────────
 
 export interface CompoundMetrics {
-  affinity: AffinityMetrics;
+  affinity: AffinityMetrics | null;
   samples: SampleMetrics[];
 }
 
@@ -100,6 +100,8 @@ export interface SampleMetrics {
   complex_iplddt: number | null;
   complex_pde: number | null;
   complex_ipde: number | null;
+  chains_ptm: Record<string, number> | null;
+  pair_chains_iptm: Record<string, Record<string, number>> | null;
 }
 
 // ── Boltz API Response Types ────────────────────────────────────────
@@ -120,7 +122,8 @@ export interface PredictionStatus {
   prediction_status: string;
   prediction_stage_description?: string;
   created_at?: string;
-  updated_at?: string;
+  started_at?: string;
+  completed_at?: string | null;
   prediction_results?: PredictionResults;
 }
 

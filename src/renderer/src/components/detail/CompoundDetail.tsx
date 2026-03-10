@@ -138,8 +138,8 @@ export function CompoundDetail({ compoundId }: { compoundId: string }) {
                 <MetricCard label="PTM" value={currentSample.ptm} />
                 <MetricCard label="Protein iPTM" value={currentSample.protein_iptm} />
                 <MetricCard label="Complex iPLDDT" value={currentSample.complex_iplddt} />
-                <MetricCard label="Complex PDE" value={currentSample.complex_pde} />
-                <MetricCard label="Complex iPDE" value={currentSample.complex_ipde} />
+                <MetricCard label="Complex PDE" value={currentSample.complex_pde} neutral />
+                <MetricCard label="Complex iPDE" value={currentSample.complex_ipde} neutral />
               </div>
             )}
           </div>
@@ -164,11 +164,11 @@ export function CompoundDetail({ compoundId }: { compoundId: string }) {
   );
 }
 
-function MetricCard({ label, value }: { label: string; value: number | null }) {
+function MetricCard({ label, value, neutral }: { label: string; value: number | null; neutral?: boolean }) {
   return (
     <div className="rounded-md border border-border bg-surface p-3">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={cn("text-lg font-semibold tabular-nums", getMetricColorClass(value))}>
+      <p className={cn("text-lg font-semibold tabular-nums", neutral ? 'text-foreground' : getMetricColorClass(value))}>
         {value != null ? value.toFixed(3) : '—'}
       </p>
     </div>
