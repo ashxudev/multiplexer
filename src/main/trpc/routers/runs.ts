@@ -67,9 +67,9 @@ export const runsRouter = router({
         await client.testConnection(apiKey);
       } catch (e) {
         if (e instanceof BoltzApiError && e.statusCode !== null && e.statusCode >= 400 && e.statusCode < 500) {
-          throw new Error('API key is invalid or expired. Check Settings.');
+          throw new Error('API key is invalid or expired. Check Settings.', { cause: e });
         }
-        throw new Error('Cannot reach the Boltz API. Try again in a few minutes.');
+        throw new Error('Cannot reach the Boltz API. Try again in a few minutes.', { cause: e });
       }
 
       const proteinSequence = campaign.protein_sequence;
