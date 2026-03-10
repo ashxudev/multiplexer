@@ -40,7 +40,8 @@ export function CompoundDetail({ compoundId }: { compoundId: string }) {
   const isRetryable = c.status === 'FAILED' || c.status === 'TIMED_OUT';
   const samples = c.metrics?.samples ?? [];
   const hasMultipleSamples = samples.length > 1;
-  const currentSample = samples[selectedSampleIndex] ?? samples[0] ?? null;
+  const sampleIndex = samples.length > 0 ? Math.min(selectedSampleIndex, samples.length - 1) : 0;
+  const currentSample = samples[sampleIndex] ?? null;
 
   return (
     <div className="flex h-full flex-col overflow-auto border-l border-border bg-background">
@@ -76,7 +77,7 @@ export function CompoundDetail({ compoundId }: { compoundId: string }) {
 
         {/* Sample/Pose selector */}
         {hasMultipleSamples && (
-          <Tabs value={String(selectedSampleIndex)} onValueChange={(v) => setSampleIndex(Number(v))}>
+          <Tabs value={String(sampleIndex)} onValueChange={(v) => setSampleIndex(Number(v))}>
             <TabsList variant="line">
               {samples.map((_, i) => (
                 <TabsTrigger key={i} value={String(i)}>Pose {i + 1}</TabsTrigger>
@@ -90,7 +91,7 @@ export function CompoundDetail({ compoundId }: { compoundId: string }) {
           <div className="space-y-1">
             <p className="text-xs font-medium text-muted-foreground">3D Structure</p>
             <MolStarErrorBoundary>
-              <MolStarViewer compoundId={c.id} sampleIndex={selectedSampleIndex} />
+              <MolStarViewer compoundId={c.id} sampleIndex={sampleIndex} />
             </MolStarErrorBoundary>
           </div>
         )}
@@ -148,7 +149,7 @@ export function CompoundDetail({ compoundId }: { compoundId: string }) {
         {c.status === 'COMPLETED' && (
           <div className="space-y-1">
             <p className="text-xs font-medium text-muted-foreground">PAE Plot</p>
-            <PaeImage compoundId={c.id} sampleIndex={selectedSampleIndex} />
+            <PaeImage compoundId={c.id} sampleIndex={sampleIndex} />
           </div>
         )}
 

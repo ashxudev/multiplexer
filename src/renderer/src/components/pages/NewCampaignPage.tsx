@@ -99,8 +99,10 @@ export function NewCampaignPage() {
             value={sequence}
             onChange={(e) => setSequence(e.target.value)}
             onBlur={() => {
-              const cleaned = stripFasta(sequence);
-              if (cleaned !== sequence) setSequence(cleaned);
+              if (sequence.split('\n').some((l) => l.startsWith('>'))) {
+                const cleaned = stripFasta(sequence);
+                if (cleaned !== sequence) setSequence(cleaned);
+              }
             }}
             placeholder="Paste sequence or FASTA format (headers will be stripped)..."
             rows={6}
