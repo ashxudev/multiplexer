@@ -27,6 +27,7 @@ export function loadState(rootDir: string): AppState {
   }
 
   // Migrate v1 → v2: null out placeholder zero-affinity metrics
+  let migrated = false;
   if (!data.schema_version || data.schema_version < 2) {
     for (const campaign of data.campaigns) {
       for (const run of campaign.runs) {
@@ -43,6 +44,7 @@ export function loadState(rootDir: string): AppState {
       }
     }
     data.schema_version = 2;
+    migrated = true;
   }
 
   // Create backup for crash recovery
@@ -52,7 +54,9 @@ export function loadState(rootDir: string): AppState {
     // Non-fatal — backup creation is best-effort
   }
 
-  return new AppState(data, rootDir);
+  const state = new AppState(data, rootDir);
+  if (migrated) state.markDirty();
+  return state;
 }
 
 /**
