@@ -20,10 +20,29 @@ export function loadState(rootDir: string): AppState {
   const raw = fs.readFileSync(statePath, 'utf-8');
   const data: AppData = JSON.parse(raw);
 
-  if (data.schema_version > 1) {
+  if (data.schema_version > 2) {
     throw new Error(
       `Unsupported state schema version: ${data.schema_version}. Please update Multiplexer.`,
     );
+  }
+
+  // Migrate v1 → v2: null out placeholder zero-affinity metrics
+  if (!data.schema_version || data.schema_version < 2) {
+    for (const campaign of data.campaigns) {
+      for (const run of campaign.runs) {
+        for (const compound of run.compounds) {
+          const aff = compound.metrics?.affinity;
+          if (
+            aff &&
+            aff.binding_confidence === 0 &&
+            aff.optimization_score === 0
+          ) {
+            compound.metrics!.affinity = null;
+          }
+        }
+      }
+    }
+    data.schema_version = 2;
   }
 
   // Create backup for crash recovery

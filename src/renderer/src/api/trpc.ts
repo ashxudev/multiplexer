@@ -44,7 +44,7 @@ const MOCK_CAMPAIGNS = [
             completed_at: new Date().toISOString(),
             metrics: {
               affinity: { binding_confidence: 0.847, optimization_score: 0.632 },
-              samples: [{ structure_confidence: 0.91, iptm: 0.85, ligand_iptm: 0.78, complex_plddt: 72.5, ptm: 0.88, protein_iptm: 0.92, complex_iplddt: 68.3, complex_pde: 0.45, complex_ipde: 0.52 }],
+              samples: [{ structure_confidence: 0.91, iptm: 0.85, ligand_iptm: 0.78, complex_plddt: 72.5, ptm: 0.88, protein_iptm: 0.92, complex_iplddt: 68.3, complex_pde: 1.05, complex_ipde: 1.24, chains_ptm: null, pair_chains_iptm: null }],
             },
             error_message: null,
             download_error: null,
