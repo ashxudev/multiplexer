@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { useAppStore } from '@/stores/useAppStore';
 import { trpc } from '@/api/trpc';
 import { CsvPreviewTable } from '@/components/forms/CsvPreviewTable';
@@ -178,10 +179,10 @@ export function NewRunPage() {
         {/* Parameters */}
         <div className="space-y-4">
           <h3 className="text-sm font-medium">Prediction Parameters</h3>
-          <ParamSlider label="Recycling Steps" value={recyclingSteps} onChange={setRecyclingSteps} min={1} max={10} step={1} />
-          <ParamSlider label="Diffusion Samples" value={diffusionSamples} onChange={setDiffusionSamples} min={1} max={10} step={1} />
-          <ParamSlider label="Sampling Steps" value={samplingSteps} onChange={setSamplingSteps} min={50} max={500} step={50} />
-          <ParamSlider label="Step Scale" value={stepScale} onChange={setStepScale} min={0.5} max={3.0} step={0.1} />
+          <ParamSlider label="Recycling Steps" value={recyclingSteps} onChange={setRecyclingSteps} min={1} max={10} step={1} tooltip="Number of recycling iterations for structure refinement. Higher values may improve accuracy but increase compute time." />
+          <ParamSlider label="Diffusion Samples" value={diffusionSamples} onChange={setDiffusionSamples} min={1} max={10} step={1} tooltip="Number of independent structure samples to generate. More samples give broader exploration of possible binding poses." />
+          <ParamSlider label="Sampling Steps" value={samplingSteps} onChange={setSamplingSteps} min={50} max={500} step={50} tooltip="Number of diffusion steps per sample. More steps generally produce higher quality structures." />
+          <ParamSlider label="Step Scale" value={stepScale} onChange={setStepScale} min={0.5} max={3.0} step={0.1} tooltip="Scaling factor for the diffusion step size. Higher values increase structural diversity at the cost of precision." />
         </div>
 
         {error && (
@@ -210,6 +211,7 @@ function ParamSlider({
   min,
   max,
   step,
+  tooltip,
 }: {
   label: string;
   value: number;
@@ -217,11 +219,25 @@ function ParamSlider({
   min: number;
   max: number;
   step: number;
+  tooltip?: string;
 }) {
+  const labelEl = tooltip ? (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Label className="text-xs border-b border-dotted border-muted-foreground cursor-help">{label}</Label>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs">{tooltip}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  ) : (
+    <Label className="text-xs">{label}</Label>
+  );
+
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
-        <Label className="text-xs">{label}</Label>
+        {labelEl}
         <span className="text-xs tabular-nums text-muted-foreground">{value}</span>
       </div>
       <Slider
