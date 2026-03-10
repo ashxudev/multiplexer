@@ -9,19 +9,19 @@ import { trpc } from '@/api/trpc';
 
 function stripFasta(input: string): string {
   return input
-    .split('\n')
+    .split(/\r?\n/)
     .filter((l) => !l.startsWith('>'))
-    .map((l) => l.trim())
-    .join('');
+    .join('')
+    .replace(/[\s\d]/g, '');
 }
 
-const AMINO_ACIDS_RE = /^[ACDEFGHIKLMNPQRSTVWY]+$/i;
+const AMINO_ACIDS_RE = /^[A-Z]+$/i;
 
 function validateSequence(seq: string): string | null {
   if (!seq) return null;
   if (!AMINO_ACIDS_RE.test(seq)) {
-    const invalid = [...new Set(seq.match(/[^ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy]/g))];
-    return `Invalid characters: ${invalid.join(', ')}. Only standard amino acid letters are allowed.`;
+    const invalid = [...new Set(seq.match(/[^A-Za-z]/g))];
+    return `Invalid characters: ${invalid.join(', ')}. Only amino acid letters are allowed.`;
   }
   return null;
 }
@@ -38,6 +38,7 @@ export function NewCampaignPage() {
   const [sequence, setSequence] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [sequenceError, setSequenceError] = useState<string | null>(null);
 
   const handleCreate = async () => {
     if (!name.trim() || !sequence.trim()) return;
@@ -97,17 +98,26 @@ export function NewCampaignPage() {
           <Label>Protein Sequence</Label>
           <Textarea
             value={sequence}
-            onChange={(e) => setSequence(e.target.value)}
+            onChange={(e) => {
+              setSequence(e.target.value);
+              if (sequenceError) setSequenceError(null);
+            }}
             onBlur={() => {
-              if (sequence.split('\n').some((l) => l.startsWith('>'))) {
-                const cleaned = stripFasta(sequence);
-                if (cleaned !== sequence) setSequence(cleaned);
+              const cleaned = stripFasta(sequence);
+              if (cleaned !== sequence) setSequence(cleaned);
+              if (cleaned) {
+                setSequenceError(validateSequence(cleaned));
+              } else {
+                setSequenceError(null);
               }
             }}
             placeholder="Paste sequence or FASTA format (headers will be stripped)..."
             rows={6}
             className="font-mono text-sm"
           />
+          {sequenceError && (
+            <p className="text-xs text-red-400 mt-1">{sequenceError}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -131,7 +141,7 @@ export function NewCampaignPage() {
         <div className="flex justify-end">
           <Button
             onClick={handleCreate}
-            disabled={!name.trim() || !sequence.trim() || createMutation.isPending}
+            disabled={!name.trim() || !sequence.trim() || !!sequenceError || createMutation.isPending}
           >
             {createMutation.isPending ? 'Creating...' : 'Create'}
           </Button>
