@@ -66,8 +66,13 @@ export const runsRouter = router({
       try {
         await client.testConnection(apiKey);
       } catch (e) {
-        if (e instanceof BoltzApiError && e.statusCode !== null && e.statusCode >= 400 && e.statusCode < 500) {
-          throw new Error('API key is invalid or expired. Check Settings.', { cause: e });
+        if (e instanceof BoltzApiError) {
+          if (e.statusCode === 401 || e.statusCode === 403) {
+            throw new Error('API key is invalid or expired. Check Settings.', { cause: e });
+          }
+          if (e.statusCode === 429) {
+            throw new Error('Boltz API rate limit reached. Try again in a few minutes.', { cause: e });
+          }
         }
         throw new Error('Cannot reach the Boltz API. Try again in a few minutes.', { cause: e });
       }
