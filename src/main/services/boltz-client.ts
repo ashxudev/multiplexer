@@ -11,19 +11,23 @@ import {
   BOLTZ_BASE_URL,
   HTTP_TIMEOUT_MS,
   RETRY_ATTEMPTS,
+  RETRY_ATTEMPTS_RATE_LIMIT,
   RETRY_BACKOFF_MS,
   RETRY_JITTER_MS,
+  RATE_LIMIT_FALLBACK_MS,
 } from '../models/types';
 
 // ── Error helpers ────────────────────────────────────────────────────
 
 class BoltzApiError extends Error {
   readonly statusCode: number | null;
+  readonly retryAfterMs: number | null;
 
-  constructor(message: string, statusCode: number | null = null) {
+  constructor(message: string, statusCode: number | null = null, retryAfterMs: number | null = null) {
     super(message);
     this.name = 'BoltzApiError';
     this.statusCode = statusCode;
+    this.retryAfterMs = retryAfterMs;
   }
 }
 
@@ -40,6 +44,23 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function parseRetryAfter(header: string | null): number | null {
+  if (!header) return null;
+  const seconds = Number(header);
+  if (!Number.isNaN(seconds) && seconds >= 0) {
+    return Math.ceil(seconds) * 1000;
+  }
+  const date = Date.parse(header);
+  if (!Number.isNaN(date)) {
+    return Math.max(0, date - Date.now());
+  }
+  return null;
+}
+
+export interface RetryOptions {
+  onRateLimited?: (delayMs: number) => void;
+}
+
 // ── BoltzClient ──────────────────────────────────────────────────────
 
 export class BoltzClient {
@@ -52,17 +73,26 @@ export class BoltzClient {
   // ── Retry wrapper ────────────────────────────────────────────────
 
   /**
-   * Retry transient errors (429, 5xx, network) up to RETRY_ATTEMPTS times.
+   * Retry transient errors (429, 5xx, network) with adaptive backoff.
+   * 429 responses use Retry-After header delay and up to 6 attempts.
+   * Other transient errors use fixed backoff and up to 3 attempts.
    * Permanent errors (400, 401, 422) fail immediately.
    */
-  private async withRetry<T>(fn: () => Promise<T>): Promise<T> {
+  private async withRetry<T>(fn: () => Promise<T>, opts?: RetryOptions): Promise<T> {
     let lastErr: unknown = new Error('No attempts made');
+    let maxAttempts = RETRY_ATTEMPTS;
 
-    for (let attempt = 0; attempt < RETRY_ATTEMPTS; attempt++) {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
       if (attempt > 0) {
-        const base = RETRY_BACKOFF_MS[attempt - 1];
-        const jitter = Math.floor(Math.random() * RETRY_JITTER_MS);
-        await sleep(base + jitter);
+        if (lastErr instanceof BoltzApiError && lastErr.statusCode === 429) {
+          const delay = lastErr.retryAfterMs ?? RATE_LIMIT_FALLBACK_MS;
+          const jitter = Math.floor(Math.random() * RETRY_JITTER_MS);
+          await sleep(delay + jitter);
+        } else {
+          const base = RETRY_BACKOFF_MS[Math.min(attempt - 1, RETRY_BACKOFF_MS.length - 1)];
+          const jitter = Math.floor(Math.random() * RETRY_JITTER_MS);
+          await sleep(base + jitter);
+        }
       }
 
       try {
@@ -71,7 +101,12 @@ export class BoltzClient {
         if (isPermanentError(err)) {
           throw err;
         }
-        console.warn(`Transient error (attempt ${attempt + 1}/${RETRY_ATTEMPTS}):`, err);
+        if (err instanceof BoltzApiError && err.statusCode === 429) {
+          maxAttempts = RETRY_ATTEMPTS_RATE_LIMIT;
+          const delay = err.retryAfterMs ?? RATE_LIMIT_FALLBACK_MS;
+          opts?.onRateLimited?.(delay);
+        }
+        console.warn(`Transient error (attempt ${attempt + 1}/${maxAttempts}):`, err);
         lastErr = err;
       }
     }
@@ -88,6 +123,7 @@ export class BoltzClient {
     apiKey: string,
     inferenceInput: unknown,
     inferenceOptions: unknown,
+    retryOpts?: RetryOptions,
   ): Promise<SubmitResponse> {
     const url = `${this.baseUrl}/api/v1/connect/predictions/boltz2`;
 
@@ -112,11 +148,14 @@ export class BoltzClient {
 
       if (!resp.ok) {
         const text = await resp.text().catch(() => '');
-        throw new BoltzApiError(`Submit failed (${resp.status}): ${text}`, resp.status);
+        const retryAfterMs = resp.status === 429
+          ? parseRetryAfter(resp.headers.get('retry-after'))
+          : null;
+        throw new BoltzApiError(`Submit failed (${resp.status}): ${text}`, resp.status, retryAfterMs);
       }
 
       return (await resp.json()) as SubmitResponse;
-    });
+    }, retryOpts);
   }
 
   /**
@@ -125,6 +164,7 @@ export class BoltzClient {
   async getPredictionStatus(
     apiKey: string,
     predictionId: string,
+    retryOpts?: RetryOptions,
   ): Promise<PredictionStatus> {
     const url = `${this.baseUrl}/api/v1/connect/predictions/${encodeURIComponent(predictionId)}`;
 
@@ -145,20 +185,24 @@ export class BoltzClient {
           );
         }
         const text = await resp.text().catch(() => '');
+        const retryAfterMs = resp.status === 429
+          ? parseRetryAfter(resp.headers.get('retry-after'))
+          : null;
         throw new BoltzApiError(
           `Status check failed (${resp.status}): ${text}`,
           resp.status,
+          retryAfterMs,
         );
       }
 
       return (await resp.json()) as PredictionStatus;
-    });
+    }, retryOpts);
   }
 
   /**
    * GET {downloadUrl} (presigned, no auth) -- returns Buffer
    */
-  async downloadTarGz(downloadUrl: string): Promise<Buffer> {
+  async downloadTarGz(downloadUrl: string, retryOpts?: RetryOptions): Promise<Buffer> {
     return this.withRetry(async () => {
       const resp = await fetch(downloadUrl, {
         method: 'GET',
@@ -166,12 +210,15 @@ export class BoltzClient {
       });
 
       if (!resp.ok) {
-        throw new BoltzApiError(`Download failed (${resp.status})`, resp.status);
+        const retryAfterMs = resp.status === 429
+          ? parseRetryAfter(resp.headers.get('retry-after'))
+          : null;
+        throw new BoltzApiError(`Download failed (${resp.status})`, resp.status, retryAfterMs);
       }
 
       const arrayBuffer = await resp.arrayBuffer();
       return Buffer.from(arrayBuffer);
-    });
+    }, retryOpts);
   }
 
   /**

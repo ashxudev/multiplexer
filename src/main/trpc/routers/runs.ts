@@ -115,14 +115,37 @@ export const runsRouter = router({
       const runId = run.id;
       const campaignId = input.campaignId;
 
+      // Shared rate-limit gate: when any submission gets a 429,
+      // pause all queued submissions for the Retry-After duration.
+      const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+      let pauseUntil = 0;
+
+      function triggerPause(delayMs: number): void {
+        pauseUntil = Math.max(pauseUntil, Date.now() + delayMs);
+      }
+
+      async function waitForGate(): Promise<void> {
+        let remaining = pauseUntil - Date.now();
+        while (remaining > 0) {
+          await sleep(remaining);
+          remaining = pauseUntil - Date.now();
+        }
+      }
+
       const tasks = compounds.map((compound) =>
         limit(async () => {
+          await waitForGate();
           const inferenceInput = buildInferenceInput(proteinSequence, compound.smiles);
           const inferenceOptions = buildInferenceOptions(input.params);
           const now = new Date().toISOString();
 
           try {
-            const resp = await client.submitPrediction(apiKey, inferenceInput, inferenceOptions);
+            const resp = await client.submitPrediction(
+              apiKey,
+              inferenceInput,
+              inferenceOptions,
+              { onRateLimited: triggerPause },
+            );
 
             // Update compound state
             const liveCompound = state.findCompound(compound.id);
