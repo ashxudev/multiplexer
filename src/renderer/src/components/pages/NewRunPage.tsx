@@ -9,6 +9,7 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/comp
 import { useAppStore } from '@/stores/useAppStore';
 import { trpc } from '@/api/trpc';
 import { CsvPreviewTable } from '@/components/forms/CsvPreviewTable';
+import { useRdkit } from '@/components/shared/RdkitProvider';
 
 interface ParsedCompound {
   name: string;
@@ -38,6 +39,8 @@ export function NewRunPage() {
   const createMutation = trpc.runs.create.useMutation();
   const utils = trpc.useUtils();
 
+  const { rdkit, ready: rdkitReady } = useRdkit();
+
   const campaign = campaigns.data?.find((c) => c.id === selectedCampaignId);
 
   const [runName, setRunName] = useState('');
@@ -53,8 +56,35 @@ export function NewRunPage() {
 
   const compounds = useMemo(() => parseSmilesList(smilesText), [smilesText]);
 
+  const invalidIndices = useMemo(() => {
+    if (!rdkit || !rdkitReady) return new Set<number>();
+    const invalid = new Set<number>();
+    for (let i = 0; i < compounds.length; i++) {
+      try {
+        const mol = rdkit.get_mol(compounds[i].smiles);
+        if (!mol) {
+          invalid.add(i);
+        } else {
+          mol.delete();
+        }
+      } catch {
+        invalid.add(i);
+      }
+    }
+    return invalid;
+  }, [rdkit, rdkitReady, compounds]);
+
+  const hasInvalidSmiles = invalidIndices.size > 0;
+  const validationPending = compounds.length > 0 && !rdkitReady;
+
+  const validationErrors = useMemo(() => {
+    if (!hasInvalidSmiles) return undefined;
+    const count = invalidIndices.size;
+    return [`${count} compound${count > 1 ? 's have' : ' has'} invalid SMILES — fix or remove before submitting.`];
+  }, [hasInvalidSmiles, invalidIndices.size]);
+
   const handleSubmit = async () => {
-    if (!runName.trim() || compounds.length === 0 || !selectedCampaignId) return;
+    if (!runName.trim() || compounds.length === 0 || !selectedCampaignId || hasInvalidSmiles || validationPending) return;
 
     setError(null);
     try {
@@ -173,7 +203,13 @@ export function NewRunPage() {
             <Input type="file" accept=".csv,.tsv,.txt" onChange={handleCsvUpload} />
           )}
 
-          {compounds.length > 0 && <CsvPreviewTable compounds={compounds} />}
+          {compounds.length > 0 && (
+            <CsvPreviewTable
+              compounds={compounds}
+              errors={validationErrors}
+              invalidIndices={invalidIndices}
+            />
+          )}
         </div>
 
         {/* Parameters */}
@@ -194,9 +230,15 @@ export function NewRunPage() {
         <div className="flex justify-end">
           <Button
             onClick={handleSubmit}
-            disabled={!runName.trim() || compounds.length === 0 || createMutation.isPending}
+            disabled={!runName.trim() || compounds.length === 0 || hasInvalidSmiles || validationPending || createMutation.isPending}
           >
-            {createMutation.isPending ? 'Submitting...' : 'Submit'}
+            {createMutation.isPending
+              ? 'Submitting...'
+              : validationPending
+                ? 'Validating…'
+                : hasInvalidSmiles
+                  ? `${invalidIndices.size} Invalid SMILES`
+                  : 'Submit'}
           </Button>
         </div>
       </div>
