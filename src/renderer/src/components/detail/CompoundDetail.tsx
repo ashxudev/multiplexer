@@ -169,7 +169,7 @@ function MetricCard({ label, value, neutral }: { label: string; value: number | 
     <div className="rounded-md border border-border bg-surface p-3">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className={cn("text-lg font-semibold tabular-nums", neutral ? 'text-foreground' : getMetricColorClass(value))}>
-        {value != null ? value.toFixed(3) : '—'}
+        {value != null ? value.toFixed(2) : '—'}
       </p>
     </div>
   );
