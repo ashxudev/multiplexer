@@ -10,10 +10,10 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # ── Derive deterministic CDP port from worktree path ────────────────
 CDP_PORT=$(python3 -c "
-import hashlib
-h = int(hashlib.md5('$PROJECT_ROOT'.encode()).hexdigest()[:4], 16)
+import hashlib, sys
+h = int(hashlib.md5(sys.argv[1].encode()).hexdigest()[:4], 16)
 print(10000 + (h % 50000))
-")
+" "$PROJECT_ROOT")
 
 # ── Check if port is already in use ─────────────────────────────────
 if lsof -ti:"$CDP_PORT" > /dev/null 2>&1; then

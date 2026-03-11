@@ -9,10 +9,10 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # ── Derive the same CDP port ────────────────────────────────────────
 CDP_PORT=$(python3 -c "
-import hashlib
-h = int(hashlib.md5('$PROJECT_ROOT'.encode()).hexdigest()[:4], 16)
+import hashlib, sys
+h = int(hashlib.md5(sys.argv[1].encode()).hexdigest()[:4], 16)
 print(10000 + (h % 50000))
-")
+" "$PROJECT_ROOT")
 
 PID_FILE="$PROJECT_ROOT/.cdp-pid"
 
