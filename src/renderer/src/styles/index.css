@@ -149,6 +149,25 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* ── Scrollbar styling — respects dark/light theme ── */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--ring);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+  }
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
   /* Override react-resizable-panels cursor (ew-resize → col-resize).
      The library injects `* { cursor: ew-resize !important }` via CSSOM during
      hover/drag. Our scoped rule has higher specificity (0,1,1) than `*` (0,0,0),
