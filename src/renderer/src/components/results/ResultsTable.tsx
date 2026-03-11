@@ -5,7 +5,7 @@ import { useAppStore } from '@/stores/useAppStore';
 import { cn } from '@/lib/utils';
 import { getMetricColorClass } from '@/lib/metric-colors';
 
-type SortColumn = 'status' | 'compound' | 'confidence' | 'ligand_iptm' | 'binding_confidence';
+type SortColumn = 'status' | 'compound' | 'confidence' | 'complex_plddt' | 'iptm' | 'ptm' | 'binding_confidence' | 'optimization_score';
 
 export function ResultsTable({ runId, targetType = 'protein' }: { runId: string; targetType?: string }) {
   const run = trpc.runs.get.useQuery({ runId });
@@ -17,7 +17,7 @@ export function ResultsTable({ runId, targetType = 'protein' }: { runId: string;
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
-    if (!showAffinity && sortColumn === 'binding_confidence') {
+    if (!showAffinity && (sortColumn === 'binding_confidence' || sortColumn === 'optimization_score')) {
       setSortColumn(null);
     }
   }, [showAffinity, sortColumn]);
@@ -43,13 +43,25 @@ export function ResultsTable({ runId, targetType = 'protein' }: { runId: string;
           aVal = a.metrics?.samples[0]?.structure_confidence ?? null;
           bVal = b.metrics?.samples[0]?.structure_confidence ?? null;
           break;
-        case 'ligand_iptm':
-          aVal = a.metrics?.samples[0]?.ligand_iptm ?? null;
-          bVal = b.metrics?.samples[0]?.ligand_iptm ?? null;
+        case 'complex_plddt':
+          aVal = a.metrics?.samples[0]?.complex_plddt ?? null;
+          bVal = b.metrics?.samples[0]?.complex_plddt ?? null;
+          break;
+        case 'iptm':
+          aVal = a.metrics?.samples[0]?.iptm ?? null;
+          bVal = b.metrics?.samples[0]?.iptm ?? null;
+          break;
+        case 'ptm':
+          aVal = a.metrics?.samples[0]?.ptm ?? null;
+          bVal = b.metrics?.samples[0]?.ptm ?? null;
           break;
         case 'binding_confidence':
           aVal = a.metrics?.affinity?.binding_confidence ?? null;
           bVal = b.metrics?.affinity?.binding_confidence ?? null;
+          break;
+        case 'optimization_score':
+          aVal = a.metrics?.affinity?.optimization_score ?? null;
+          bVal = b.metrics?.affinity?.optimization_score ?? null;
           break;
       }
 
@@ -96,18 +108,26 @@ export function ResultsTable({ runId, targetType = 'protein' }: { runId: string;
             <SortHeader column="status" label="Status" align="left" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
             <SortHeader column="compound" label="Compound" align="left" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
             <th className="px-4 py-2 text-left font-medium text-muted-foreground">SMILES</th>
-            <SortHeader column="confidence" label="Confidence" align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
-            <SortHeader column="ligand_iptm" label="Ligand iPTM" align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
             {showAffinity && (
-              <SortHeader column="binding_confidence" label="Binding Conf." align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
+              <>
+                <SortHeader column="binding_confidence" label={<span className="text-left">Binding<br/>Confidence</span>} align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader column="optimization_score" label={<span className="text-left">Optimization<br/>Score</span>} align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
+              </>
             )}
+            <SortHeader column="confidence" label={<span className="text-left">Structure<br/>Confidence</span>} align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
+            <SortHeader column="complex_plddt" label="pLDDT" align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
+            <SortHeader column="iptm" label="ipTM" align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
+            <SortHeader column="ptm" label="pTM" align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
           </tr>
         </thead>
         <tbody>
           {sortedCompounds.map((compound) => {
             const confidence = compound.metrics?.samples[0]?.structure_confidence ?? null;
-            const ligandIptm = compound.metrics?.samples[0]?.ligand_iptm ?? null;
+            const complexPlddt = compound.metrics?.samples[0]?.complex_plddt ?? null;
+            const iptm = compound.metrics?.samples[0]?.iptm ?? null;
+            const ptm = compound.metrics?.samples[0]?.ptm ?? null;
             const bindingConf = compound.metrics?.affinity?.binding_confidence ?? null;
+            const optScore = compound.metrics?.affinity?.optimization_score ?? null;
 
             return (
               <tr
@@ -122,17 +142,28 @@ export function ResultsTable({ runId, targetType = 'protein' }: { runId: string;
                 <td className="px-4 py-2 max-w-[200px] truncate font-mono text-xs text-muted-foreground">
                   {compound.smiles}
                 </td>
-                <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(confidence))}>
-                  {confidence != null ? confidence.toFixed(3) : '—'}
-                </td>
-                <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(ligandIptm))}>
-                  {ligandIptm != null ? ligandIptm.toFixed(3) : '—'}
-                </td>
                 {showAffinity && (
-                  <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(bindingConf))}>
-                    {bindingConf != null ? bindingConf.toFixed(3) : '—'}
-                  </td>
+                  <>
+                    <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(bindingConf))}>
+                      {bindingConf != null ? bindingConf.toFixed(2) : '—'}
+                    </td>
+                    <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(optScore))}>
+                      {optScore != null ? optScore.toFixed(2) : '—'}
+                    </td>
+                  </>
                 )}
+                <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(confidence))}>
+                  {confidence != null ? confidence.toFixed(2) : '—'}
+                </td>
+                <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(complexPlddt))}>
+                  {complexPlddt != null ? complexPlddt.toFixed(2) : '—'}
+                </td>
+                <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(iptm))}>
+                  {iptm != null ? iptm.toFixed(2) : '—'}
+                </td>
+                <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(ptm))}>
+                  {ptm != null ? ptm.toFixed(2) : '—'}
+                </td>
               </tr>
             );
           })}
@@ -151,7 +182,7 @@ function SortHeader({
   onSort,
 }: {
   column: SortColumn;
-  label: string;
+  label: React.ReactNode;
   align: 'left' | 'right';
   activeColumn: SortColumn | null;
   sortDir: 'asc' | 'desc';
