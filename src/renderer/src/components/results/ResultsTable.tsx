@@ -110,14 +110,14 @@ export function ResultsTable({ runId, targetType = 'protein' }: { runId: string;
             <th className="px-4 py-2 text-left font-medium text-muted-foreground">SMILES</th>
             {showAffinity && (
               <>
-                <SortHeader column="binding_confidence" label={<span className="text-left">Binding<br/>Confidence</span>} align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
-                <SortHeader column="optimization_score" label={<span className="text-left">Optimization<br/>Score</span>} align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader column="binding_confidence" label={<span className="text-left">Binding<br/>Confidence</span>} align="center" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
+                <SortHeader column="optimization_score" label={<span className="text-left">Optimization<br/>Score</span>} align="center" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
               </>
             )}
-            <SortHeader column="confidence" label={<span className="text-left">Structure<br/>Confidence</span>} align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
-            <SortHeader column="complex_plddt" label="pLDDT" align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
-            <SortHeader column="iptm" label="ipTM" align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
-            <SortHeader column="ptm" label="pTM" align="right" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
+            <SortHeader column="confidence" label={<span className="text-left">Structure<br/>Confidence</span>} align="center" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
+            <SortHeader column="complex_plddt" label="pLDDT" align="center" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
+            <SortHeader column="iptm" label="ipTM" align="center" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
+            <SortHeader column="ptm" label="pTM" align="center" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
           </tr>
         </thead>
         <tbody>
@@ -144,24 +144,24 @@ export function ResultsTable({ runId, targetType = 'protein' }: { runId: string;
                 </td>
                 {showAffinity && (
                   <>
-                    <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(bindingConf))}>
+                    <td className={cn("px-4 py-2 text-center tabular-nums", getMetricColorClass(bindingConf))}>
                       {bindingConf != null ? bindingConf.toFixed(2) : '—'}
                     </td>
-                    <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(optScore))}>
+                    <td className={cn("px-4 py-2 text-center tabular-nums", getMetricColorClass(optScore))}>
                       {optScore != null ? optScore.toFixed(2) : '—'}
                     </td>
                   </>
                 )}
-                <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(confidence))}>
+                <td className={cn("px-4 py-2 text-center tabular-nums", getMetricColorClass(confidence))}>
                   {confidence != null ? confidence.toFixed(2) : '—'}
                 </td>
-                <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(complexPlddt))}>
+                <td className={cn("px-4 py-2 text-center tabular-nums", getMetricColorClass(complexPlddt))}>
                   {complexPlddt != null ? complexPlddt.toFixed(2) : '—'}
                 </td>
-                <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(iptm))}>
+                <td className={cn("px-4 py-2 text-center tabular-nums", getMetricColorClass(iptm))}>
                   {iptm != null ? iptm.toFixed(2) : '—'}
                 </td>
-                <td className={cn("px-4 py-2 text-right tabular-nums", getMetricColorClass(ptm))}>
+                <td className={cn("px-4 py-2 text-center tabular-nums", getMetricColorClass(ptm))}>
                   {ptm != null ? ptm.toFixed(2) : '—'}
                 </td>
               </tr>
@@ -183,7 +183,7 @@ function SortHeader({
 }: {
   column: SortColumn;
   label: React.ReactNode;
-  align: 'left' | 'right';
+  align: 'left' | 'right' | 'center';
   activeColumn: SortColumn | null;
   sortDir: 'asc' | 'desc';
   onSort: (col: SortColumn) => void;
@@ -192,10 +192,10 @@ function SortHeader({
   const Icon = isActive ? (sortDir === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown;
 
   return (
-    <th className={cn("px-4 py-2 font-medium text-muted-foreground", align === 'right' ? 'text-right' : 'text-left')}>
+    <th className={cn("px-4 py-2 font-medium text-muted-foreground", { 'text-right': align === 'right', 'text-left': align === 'left', 'text-center': align === 'center' })}>
       <button
         onClick={() => onSort(column)}
-        className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+        className={cn("inline-flex items-center gap-1 hover:text-foreground transition-colors", align === 'center' && "mx-auto")}
       >
         {label}
         <Icon className={cn("h-3 w-3", !isActive && "opacity-40")} />
