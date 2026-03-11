@@ -51,6 +51,9 @@ yarn-error.log*
 # Playwright screenshots
 playwright/
 
+# Playwright dev server (written by scripts/dev.sh)
+.cdp-pid
+
 # Misc
 *.bak
 *.tmp

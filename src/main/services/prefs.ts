@@ -16,6 +16,7 @@ export function defaultRootDir(): string {
 }
 
 export function readRootDir(): string {
+  if (process.env.MULTIPLEXER_ROOT_DIR) return process.env.MULTIPLEXER_ROOT_DIR;
   const p = prefsPath();
   if (!fs.existsSync(p)) {
     return defaultRootDir();
