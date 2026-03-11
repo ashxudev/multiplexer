@@ -3,7 +3,6 @@ import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { trpc } from '@/api/trpc';
 import { useAppStore } from '@/stores/useAppStore';
 import { cn } from '@/lib/utils';
-import { getMetricColorClass } from '@/lib/metric-colors';
 
 type SortColumn = 'status' | 'compound' | 'confidence' | 'complex_plddt' | 'iptm' | 'ptm' | 'binding_confidence' | 'optimization_score';
 
@@ -144,24 +143,24 @@ export function ResultsTable({ runId, targetType = 'protein' }: { runId: string;
                 </td>
                 {showAffinity && (
                   <>
-                    <td className={cn("px-4 py-2 text-center tabular-nums", getMetricColorClass(bindingConf))}>
+                    <td className="px-4 py-2 text-center tabular-nums text-foreground">
                       {bindingConf != null ? bindingConf.toFixed(2) : '—'}
                     </td>
-                    <td className={cn("px-4 py-2 text-center tabular-nums", getMetricColorClass(optScore))}>
+                    <td className="px-4 py-2 text-center tabular-nums text-foreground">
                       {optScore != null ? optScore.toFixed(2) : '—'}
                     </td>
                   </>
                 )}
-                <td className={cn("px-4 py-2 text-center tabular-nums", getMetricColorClass(confidence))}>
+                <td className="px-4 py-2 text-center tabular-nums text-foreground">
                   {confidence != null ? confidence.toFixed(2) : '—'}
                 </td>
-                <td className={cn("px-4 py-2 text-center tabular-nums", getMetricColorClass(complexPlddt))}>
+                <td className="px-4 py-2 text-center tabular-nums text-foreground">
                   {complexPlddt != null ? complexPlddt.toFixed(2) : '—'}
                 </td>
-                <td className={cn("px-4 py-2 text-center tabular-nums", getMetricColorClass(iptm))}>
+                <td className="px-4 py-2 text-center tabular-nums text-foreground">
                   {iptm != null ? iptm.toFixed(2) : '—'}
                 </td>
-                <td className={cn("px-4 py-2 text-center tabular-nums", getMetricColorClass(ptm))}>
+                <td className="px-4 py-2 text-center tabular-nums text-foreground">
                   {ptm != null ? ptm.toFixed(2) : '—'}
                 </td>
               </tr>
