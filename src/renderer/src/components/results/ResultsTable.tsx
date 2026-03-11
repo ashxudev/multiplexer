@@ -9,6 +9,7 @@ type SortColumn = 'status' | 'compound' | 'confidence' | 'complex_plddt' | 'iptm
 export function ResultsTable({ runId, targetType = 'protein' }: { runId: string; targetType?: string }) {
   const run = trpc.runs.get.useQuery({ runId });
   const selectCompound = useAppStore((s) => s.selectCompound);
+  const selectedCompoundId = useAppStore((s) => s.selectedCompoundId);
 
   const showAffinity = targetType === 'protein';
 
@@ -132,7 +133,10 @@ export function ResultsTable({ runId, targetType = 'protein' }: { runId: string;
               <tr
                 key={compound.id}
                 onClick={() => selectCompound(compound.id)}
-                className="border-b border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
+                className={cn(
+                  "border-b border-border/50 cursor-pointer hover:bg-muted/50 transition-colors",
+                  selectedCompoundId === compound.id && "bg-muted/50"
+                )}
               >
                 <td className="px-4 py-2">
                   <StatusBadge status={compound.status} />
