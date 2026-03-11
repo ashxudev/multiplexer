@@ -69,8 +69,9 @@ export function WorkspaceView() {
   // Uses the sidebar's current width (not its minimum) so the sidebar stays exactly where it is.
   // When sidebar is collapsed, allow the full target.
   const sidebarCurrentPct = containerWidth > 0 ? (sidebarWidth / containerWidth) * 100 : defaultSidebarPct;
+  const DETAIL_MIN_PCT = 20;
   const detailMaxPct = sidebarOpen
-    ? Math.min(DETAIL_MAX_TARGET, 100 - sidebarCurrentPct - MAIN_MIN_PCT)
+    ? Math.max(DETAIL_MIN_PCT, Math.min(DETAIL_MAX_TARGET, 100 - sidebarCurrentPct - MAIN_MIN_PCT))
     : DETAIL_MAX_TARGET;
 
   // Resolve target type for the selected campaign (needed by ResultsTable)
