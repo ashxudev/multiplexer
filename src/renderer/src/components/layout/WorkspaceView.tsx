@@ -74,11 +74,16 @@ export function WorkspaceView() {
     ? Math.max(DETAIL_MIN_PCT, Math.min(DETAIL_MAX_TARGET, 100 - sidebarCurrentPct - MAIN_MIN_PCT))
     : DETAIL_MAX_TARGET;
 
-  // Resolve target type for the selected campaign (needed by ResultsTable)
-  const selectedTargetType = useMemo(() => {
-    if (!selectedCampaignId || !campaigns.data) return 'protein' as const;
+  // Resolve campaign metadata for the selected campaign (needed by ResultsTable)
+  const selectedCampaignMeta = useMemo(() => {
+    if (!selectedCampaignId || !campaigns.data)
+      return { targetType: 'protein' as const, campaignName: '', targetSequence: '' };
     const campaign = campaigns.data.find((c) => c.id === selectedCampaignId);
-    return campaign?.target_type ?? 'protein';
+    return {
+      targetType: campaign?.target_type ?? ('protein' as const),
+      campaignName: campaign?.display_name ?? '',
+      targetSequence: campaign?.target_sequence ?? '',
+    };
   }, [selectedCampaignId, campaigns.data]);
 
   // Sync store → panel for programmatic toggle (Cmd+B)
@@ -172,7 +177,12 @@ export function WorkspaceView() {
             {!hasCampaigns ? (
               <OnboardingCard />
             ) : selectedRunId ? (
-              <ResultsTable runId={selectedRunId} targetType={selectedTargetType} />
+              <ResultsTable
+                runId={selectedRunId}
+                targetType={selectedCampaignMeta.targetType}
+                campaignName={selectedCampaignMeta.campaignName}
+                targetSequence={selectedCampaignMeta.targetSequence}
+              />
             ) : (
               <div className="flex h-full flex-col items-center justify-center gap-8">
                 <PixelText text="MULTIPLEXER" className="h-14 w-auto text-foreground" />
