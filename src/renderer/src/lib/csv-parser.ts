@@ -112,10 +112,10 @@ function parseHeaderless(text: string): CsvParseResult {
   }
 
   if (colCount === 2) {
-    // Two columns — col 0 = name, col 1 = SMILES
+    // Two columns — col 0 = SMILES, col 1 = name (standard .smi format)
     const compounds = rows.map((row, i) => ({
-      name: row[0]?.trim() || `Compound ${i + 1}`,
-      smiles: row[1]?.trim() || '',
+      name: row[1]?.trim() || `Compound ${i + 1}`,
+      smiles: row[0]?.trim() || '',
     })).filter((c) => c.smiles !== '');
     return { compounds, headers: null, detectedSmilesCol: null, detectedNameCol: null, needsManualMapping: false };
   }

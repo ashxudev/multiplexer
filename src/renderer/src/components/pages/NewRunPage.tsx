@@ -123,26 +123,30 @@ export function NewRunPage() {
   const openCsvFile = trpc.actions.openCsvFile.useMutation();
 
   const handleLoadCsv = async () => {
-    const result = await openCsvFile.mutateAsync();
-    if (!result) return;
+    try {
+      const result = await openCsvFile.mutateAsync();
+      if (!result) return;
 
-    setCsvRawText(result.content);
-    setCsvFileName(result.fileName);
+      setCsvRawText(result.content);
+      setCsvFileName(result.fileName);
 
-    const parsed = parseCsvText(result.content);
+      const parsed = parseCsvText(result.content);
 
-    if (parsed.needsManualMapping) {
-      setCsvHeaders(parsed.headers);
-      setNeedsManualMapping(true);
-      setSelectedSmilesCol(null);
-      setSelectedNameCol(null);
-      setFileCompounds(null);
-      return;
+      if (parsed.needsManualMapping) {
+        setCsvHeaders(parsed.headers);
+        setNeedsManualMapping(true);
+        setSelectedSmilesCol(null);
+        setSelectedNameCol(null);
+        setFileCompounds(null);
+        return;
+      }
+
+      setNeedsManualMapping(false);
+      setCsvHeaders(null);
+      setFileCompounds(parsed.compounds);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load CSV file');
     }
-
-    setNeedsManualMapping(false);
-    setCsvHeaders(null);
-    setFileCompounds(parsed.compounds);
   };
 
   // Re-extract compounds when user selects columns in manual mapping mode

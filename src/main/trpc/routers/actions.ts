@@ -16,7 +16,7 @@ export const actionsRouter = router({
       return null;
     }
     const filePath = result.filePaths[0];
-    const content = fs.readFileSync(filePath, 'utf-8');
+    const content = await fs.promises.readFile(filePath, 'utf-8');
     const fileName = path.basename(filePath);
     return { content, fileName };
   }),
