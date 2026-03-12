@@ -68,21 +68,9 @@ export function parseCsvText(text: string): CsvParseResult {
       };
     }
 
-    // No recognized headers — try headerless heuristics
-    // If the "header" row itself looks like data (no fields match any known header
-    // and column count is 1 or 2), re-parse without headers
-    if (fields.length <= 2) {
-      return parseHeaderless(text);
-    }
-
-    // More than 2 unrecognized columns — need manual mapping
-    return {
-      compounds: [],
-      headers: fields,
-      detectedSmilesCol: null,
-      detectedNameCol: null,
-      needsManualMapping: true,
-    };
+    // No recognized headers — re-parse without headers so the first data
+    // row isn't silently consumed as column names
+    return parseHeaderless(text);
   }
 
   // No fields at all — try headerless
@@ -188,6 +176,27 @@ export function extractCompoundsFromColumns(
   smilesCol: string,
   nameCol: string | null,
 ): ParsedCompound[] {
+  // Synthetic "Column N" headers come from headerless parsing — use index-based access
+  const smilesIdxMatch = smilesCol.match(/^Column (\d+)$/);
+  if (smilesIdxMatch) {
+    const smilesIdx = parseInt(smilesIdxMatch[1], 10) - 1;
+    const nameIdx = nameCol?.match(/^Column (\d+)$/)?.[1];
+    const nameColIdx = nameIdx != null ? parseInt(nameIdx, 10) - 1 : null;
+
+    const result = Papa.parse<string[]>(text, {
+      header: false,
+      skipEmptyLines: true,
+    });
+
+    return result.data
+      .map((row, i) => ({
+        name: nameColIdx !== null ? (row[nameColIdx]?.trim() || `Compound ${i + 1}`) : `Compound ${i + 1}`,
+        smiles: row[smilesIdx]?.trim() || '',
+      }))
+      .filter((c) => c.smiles !== '');
+  }
+
+  // Real headers — parse with header: true
   const result = Papa.parse<Record<string, string>>(text, {
     header: true,
     skipEmptyLines: true,

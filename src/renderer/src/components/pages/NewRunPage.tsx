@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { ArrowLeft, ChevronRight, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -42,10 +42,17 @@ export function NewRunPage() {
 
   const campaign = campaigns.data?.find((c) => c.id === selectedCampaignId);
 
-  const [runName, setRunName] = useState(() => {
-    const count = campaign?.runs?.length ?? 0;
-    return `Run ${count + 1}`;
-  });
+  const [runName, setRunName] = useState('Run 1');
+  const runNameSynced = useRef(false);
+
+  // Sync default run name once campaign data loads
+  useEffect(() => {
+    if (campaign && !runNameSynced.current) {
+      runNameSynced.current = true;
+      const count = campaign.runs?.length ?? 0;
+      setRunName(`Run ${count + 1}`);
+    }
+  }, [campaign]);
   const [smilesText, setSmilesText] = useState('');
   const [inputMode, setInputMode] = useState<'paste' | 'csv'>('paste');
   const [error, setError] = useState<string | null>(null);
