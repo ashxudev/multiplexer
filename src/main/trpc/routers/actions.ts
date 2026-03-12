@@ -43,7 +43,7 @@ export const actionsRouter = router({
         filters: [{ name: 'CSV Files', extensions: ['csv'] }],
       });
       if (result.canceled || !result.filePath) return null;
-      fs.writeFileSync(result.filePath, input.csvContent, 'utf-8');
+      await fs.promises.writeFile(result.filePath, input.csvContent, 'utf-8');
       return result.filePath;
     }),
 });
