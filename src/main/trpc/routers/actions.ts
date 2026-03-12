@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { dialog, shell } from 'electron';
+import { app, dialog, shell } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import { router, publicProcedure } from '../trpc';
@@ -42,5 +42,23 @@ export const actionsRouter = router({
         `sample_${input.sampleIndex}_structure.cif`,
       );
       shell.openPath(cifPath);
+    }),
+
+  exportCsv: publicProcedure
+    .input(
+      z.object({
+        csvContent: z.string(),
+        defaultFilename: z.string(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const result = await dialog.showSaveDialog({
+        title: 'Export CSV',
+        defaultPath: path.join(app.getPath('downloads'), input.defaultFilename),
+        filters: [{ name: 'CSV Files', extensions: ['csv'] }],
+      });
+      if (result.canceled || !result.filePath) return null;
+      await fs.promises.writeFile(result.filePath, input.csvContent, 'utf-8');
+      return result.filePath;
     }),
 });

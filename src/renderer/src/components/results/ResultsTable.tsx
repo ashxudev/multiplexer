@@ -1,15 +1,30 @@
-import { useEffect, useState, useMemo } from 'react';
-import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
+import { ArrowUpDown, ArrowUp, ArrowDown, Download } from 'lucide-react';
+import Papa from 'papaparse';
 import { trpc } from '@/api/trpc';
 import { useAppStore } from '@/stores/useAppStore';
+import { useRdkit } from '@/components/shared/RdkitProvider';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 type SortColumn = 'status' | 'compound' | 'confidence' | 'complex_plddt' | 'iptm' | 'ptm' | 'binding_confidence' | 'optimization_score';
 
-export function ResultsTable({ runId, targetType = 'protein' }: { runId: string; targetType?: string }) {
+export function ResultsTable({
+  runId,
+  targetType = 'protein',
+  campaignName = '',
+  targetSequence = '',
+}: {
+  runId: string;
+  targetType?: string;
+  campaignName?: string;
+  targetSequence?: string;
+}) {
   const run = trpc.runs.get.useQuery({ runId });
   const selectCompound = useAppStore((s) => s.selectCompound);
   const selectedCompoundId = useAppStore((s) => s.selectedCompoundId);
+  const { rdkit, ready: rdkitReady } = useRdkit();
+  const exportCsv = trpc.actions.exportCsv.useMutation();
 
   const showAffinity = targetType === 'protein';
 
@@ -84,6 +99,96 @@ export function ResultsTable({ runId, targetType = 'protein' }: { runId: string;
     }
   };
 
+  const handleExportCsv = useCallback(() => {
+    if (!run.data) return;
+
+    const runName = run.data.display_name;
+    const params = run.data.params;
+
+    // Metadata header rows (# prefixed)
+    const seq = targetSequence.length > 50 ? targetSequence.slice(0, 50) + '...' : targetSequence;
+    const metaLines = [
+      `# Campaign: ${campaignName}`,
+      `# Target Type: ${targetType}`,
+      `# Target Sequence: ${seq}`,
+      `# Run: ${runName}`,
+      `# Parameters: recycling_steps=${params.recycling_steps}, diffusion_samples=${params.diffusion_samples}, sampling_steps=${params.sampling_steps}, step_scale=${params.step_scale}`,
+      `# Exported: ${new Date().toISOString()}`,
+      `# Model: Boltz-2`,
+    ];
+
+    // Column headers
+    const headers = [
+      'Rank', 'Name', 'SMILES', 'Status',
+      'Structure Confidence', 'Complex pLDDT', 'ipTM', 'pTM',
+    ];
+    if (showAffinity) headers.push('Binding Confidence', 'Optimization Score');
+    headers.push('MW', 'CLogP', 'TPSA', 'HBA', 'HBD', 'Rotatable Bonds');
+
+    // Build rows using current sort order
+    const rows = sortedCompounds.map((compound, index) => {
+      const sample = compound.metrics?.samples[0] ?? null;
+      const affinity = compound.metrics?.affinity ?? null;
+
+      // RDKit: canonical SMILES + descriptors
+      let canonSmiles = compound.smiles;
+      let mw: number | null = null;
+      let clogp: number | null = null;
+      let tpsa: number | null = null;
+      let hba: number | null = null;
+      let hbd: number | null = null;
+      let rotBonds: number | null = null;
+
+      if (rdkit && rdkitReady) {
+        try {
+          const mol = rdkit.get_mol(compound.smiles);
+          if (mol) {
+            try {
+              canonSmiles = mol.get_smiles();
+              const desc = JSON.parse(mol.get_descriptors());
+              mw = desc.exactmw ?? null;
+              clogp = desc.CrippenClogP ?? null;
+              tpsa = desc.tpsa ?? null;
+              hba = desc.NumHBA ?? null;
+              hbd = desc.NumHBD ?? null;
+              rotBonds = desc.NumRotatableBonds ?? null;
+            } finally {
+              mol.delete();
+            }
+          }
+        } catch {
+          // RDKit failure — leave descriptor cells empty
+        }
+      }
+
+      const row: (string | number | null)[] = [
+        index + 1,
+        compound.display_name,
+        canonSmiles,
+        compound.status,
+        sample?.structure_confidence ?? null,
+        sample?.complex_plddt ?? null,
+        sample?.iptm ?? null,
+        sample?.ptm ?? null,
+      ];
+      if (showAffinity) {
+        row.push(affinity?.binding_confidence ?? null, affinity?.optimization_score ?? null);
+      }
+      row.push(mw, clogp, tpsa, hba, hbd, rotBonds);
+      return row;
+    });
+
+    const csvData = Papa.unparse({ fields: headers, data: rows });
+    const fullCsv = metaLines.join('\n') + '\n' + csvData;
+
+    // Sanitized default filename
+    const sanitize = (s: string) => s.replace(/[^a-zA-Z0-9_-]/g, '-').replace(/-+/g, '-').slice(0, 50);
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const defaultFilename = `${sanitize(campaignName)}_${sanitize(runName)}_${dateStr}.csv`;
+
+    exportCsv.mutate({ csvContent: fullCsv, defaultFilename });
+  }, [run.data, sortedCompounds, showAffinity, rdkit, rdkitReady, campaignName, targetType, targetSequence, exportCsv]);
+
   if (run.isLoading) {
     return (
       <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -101,7 +206,19 @@ export function ResultsTable({ runId, targetType = 'protein' }: { runId: string;
   }
 
   return (
-    <div className="h-full overflow-auto">
+    <div className="flex h-full flex-col">
+      <div className="flex items-center justify-end border-b border-border px-4 py-1.5">
+        <Button
+          variant="ghost"
+          size="xs"
+          onClick={handleExportCsv}
+          disabled={exportCsv.isPending || !run.data?.compounds.length}
+        >
+          <Download className="h-3.5 w-3.5" />
+          Export CSV
+        </Button>
+      </div>
+      <div className="flex-1 overflow-auto">
       <table className="w-full text-sm">
         <thead className="sticky top-0 bg-background border-b border-border">
           <tr>
@@ -172,6 +289,7 @@ export function ResultsTable({ runId, targetType = 'protein' }: { runId: string;
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

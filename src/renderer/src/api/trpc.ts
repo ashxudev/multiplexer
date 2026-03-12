@@ -110,6 +110,7 @@ function getMockResponse(path: string, input: unknown): unknown {
     case 'actions.openCsvFile':
     case 'actions.openInFinder':
     case 'actions.openExternal':
+    case 'actions.exportCsv':
       return null;
     case 'runs.get': {
       const runId = (input as { runId?: string })?.runId;
