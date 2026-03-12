@@ -9,8 +9,8 @@ export const actionsRouter = router({
   openCsvFile: publicProcedure.mutation(async () => {
     const result = await dialog.showOpenDialog({
       properties: ['openFile'],
-      title: 'Load CSV File',
-      filters: [{ name: 'CSV/TSV Files', extensions: ['csv', 'tsv', 'txt'] }],
+      title: 'Load Molecule File',
+      filters: [{ name: 'Molecule Files', extensions: ['csv', 'tsv', 'txt', 'smi', 'smiles'] }],
     });
     if (result.canceled || result.filePaths.length === 0) {
       return null;

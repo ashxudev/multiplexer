@@ -126,6 +126,63 @@ function parseHeaderless(text: string): CsvParseResult {
   return { compounds: [], headers, detectedSmilesCol: null, detectedNameCol: null, needsManualMapping: true };
 }
 
+const SMI_EXTENSIONS = new Set(['smi', 'smiles']);
+
+function getExtension(fileName: string): string {
+  const dot = fileName.lastIndexOf('.');
+  return dot >= 0 ? fileName.slice(dot + 1).toLowerCase() : '';
+}
+
+/**
+ * Parse a .smi/.smiles file: each line is SMILES followed by optional
+ * whitespace + name. Splits on the first whitespace character so
+ * multi-word names (e.g. "Acetic acid") are preserved.
+ */
+function parseSmiText(text: string): CsvParseResult {
+  const compounds: ParsedCompound[] = [];
+  const lines = text.split(/\r?\n/);
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line || line.startsWith('#')) continue; // skip blank lines and comments
+
+    const match = line.match(/^(\S+)\s+(.*)/);
+    if (match) {
+      compounds.push({
+        smiles: match[1],
+        name: match[2].trim() || `Compound ${compounds.length + 1}`,
+      });
+    } else {
+      // Single token — SMILES only, no name
+      compounds.push({
+        smiles: line,
+        name: `Compound ${compounds.length + 1}`,
+      });
+    }
+  }
+
+  return {
+    compounds,
+    headers: null,
+    detectedSmilesCol: null,
+    detectedNameCol: null,
+    needsManualMapping: false,
+  };
+}
+
+/**
+ * Entry point: routes to the appropriate parser based on file extension.
+ * .smi/.smiles → dedicated whitespace-splitting parser
+ * Everything else → PapaParse CSV/TSV parser with header auto-detection
+ */
+export function parseFile(text: string, fileName: string): CsvParseResult {
+  const ext = getExtension(fileName);
+  if (SMI_EXTENSIONS.has(ext)) {
+    return parseSmiText(text);
+  }
+  return parseCsvText(text);
+}
+
 export function extractCompoundsFromColumns(
   text: string,
   smilesCol: string,

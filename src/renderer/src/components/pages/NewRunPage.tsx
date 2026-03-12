@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { ArrowLeft, ChevronRight, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import { trpc } from '@/api/trpc';
 import { CsvPreviewTable } from '@/components/forms/CsvPreviewTable';
 import { CsvColumnMapper } from '@/components/forms/CsvColumnMapper';
 import { useRdkit } from '@/components/shared/RdkitProvider';
-import { parseCsvText, extractCompoundsFromColumns } from '@/lib/csv-parser';
+import { parseFile, extractCompoundsFromColumns } from '@/lib/csv-parser';
 import type { ParsedCompound } from '@/types/compounds';
 
 function parseSmilesList(text: string): ParsedCompound[] {
@@ -42,7 +42,10 @@ export function NewRunPage() {
 
   const campaign = campaigns.data?.find((c) => c.id === selectedCampaignId);
 
-  const [runName, setRunName] = useState('');
+  const [runName, setRunName] = useState(() => {
+    const count = campaign?.runs?.length ?? 0;
+    return `Run ${count + 1}`;
+  });
   const [smilesText, setSmilesText] = useState('');
   const [inputMode, setInputMode] = useState<'paste' | 'csv'>('paste');
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +59,8 @@ export function NewRunPage() {
   const [selectedNameCol, setSelectedNameCol] = useState<string | null>(null);
   const [csvRawText, setCsvRawText] = useState<string | null>(null);
   const [csvFileName, setCsvFileName] = useState<string | null>(null);
+
+  const [isDragging, setIsDragging] = useState(false);
 
   // Parameters
   const [recyclingSteps, setRecyclingSteps] = useState(3);
@@ -122,32 +127,69 @@ export function NewRunPage() {
 
   const openCsvFile = trpc.actions.openCsvFile.useMutation();
 
+  const ACCEPTED_EXTENSIONS = new Set(['csv', 'tsv', 'txt', 'smi', 'smiles']);
+
+  const processFile = useCallback((content: string, fileName: string) => {
+    setCsvRawText(content);
+    setCsvFileName(fileName);
+    setError(null);
+
+    const parsed = parseFile(content, fileName);
+
+    if (parsed.needsManualMapping) {
+      setCsvHeaders(parsed.headers);
+      setNeedsManualMapping(true);
+      setSelectedSmilesCol(null);
+      setSelectedNameCol(null);
+      setFileCompounds(null);
+      return;
+    }
+
+    setNeedsManualMapping(false);
+    setCsvHeaders(null);
+    setFileCompounds(parsed.compounds);
+  }, []);
+
   const handleLoadCsv = async () => {
     try {
       const result = await openCsvFile.mutateAsync();
       if (!result) return;
-
-      setCsvRawText(result.content);
-      setCsvFileName(result.fileName);
-
-      const parsed = parseCsvText(result.content);
-
-      if (parsed.needsManualMapping) {
-        setCsvHeaders(parsed.headers);
-        setNeedsManualMapping(true);
-        setSelectedSmilesCol(null);
-        setSelectedNameCol(null);
-        setFileCompounds(null);
-        return;
-      }
-
-      setNeedsManualMapping(false);
-      setCsvHeaders(null);
-      setFileCompounds(parsed.compounds);
+      processFile(result.content, result.fileName);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load CSV file');
     }
   };
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+    if (!ACCEPTED_EXTENSIONS.has(ext)) {
+      setError(`Unsupported file type ".${ext}". Use .csv, .tsv, or .smi files.`);
+      return;
+    }
+
+    try {
+      const content = await file.text();
+      processFile(content, file.name);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to read file');
+    }
+  }, [processFile]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
 
   // Re-extract compounds when user selects columns in manual mapping mode
   useEffect(() => {
@@ -253,23 +295,40 @@ export function NewRunPage() {
               onChange={(e) => setSmilesText(e.target.value)}
               placeholder="One SMILES per line, or name,SMILES per line"
               rows={6}
-              className="font-mono text-sm"
+              className="font-mono text-sm max-h-40 overflow-auto"
             />
           ) : (
             <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleLoadCsv}
-                  disabled={openCsvFile.isPending}
-                >
-                  <Upload className="h-4 w-4 mr-1.5" />
-                  {openCsvFile.isPending ? 'Loading…' : 'Load CSV'}
-                </Button>
-                {csvFileName && (
-                  <span className="text-xs text-muted-foreground truncate">{csvFileName}</span>
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={cn(
+                  'rounded-md border-2 border-dashed p-6 text-center transition-colors',
+                  isDragging
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border',
                 )}
+              >
+                <div className="flex flex-col items-center gap-3">
+                  <Upload className="h-8 w-8 text-muted-foreground" />
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">
+                      Drag and drop a .csv or .smi file here, or
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleLoadCsv}
+                      disabled={openCsvFile.isPending}
+                    >
+                      {openCsvFile.isPending ? 'Uploading…' : 'Upload CSV'}
+                    </Button>
+                  </div>
+                  {csvFileName && (
+                    <span className="text-xs text-muted-foreground truncate max-w-full">{csvFileName}</span>
+                  )}
+                </div>
               </div>
 
               {needsManualMapping && csvHeaders && (
