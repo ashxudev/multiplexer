@@ -102,10 +102,12 @@ function getMockResponse(path: string, input: unknown): unknown {
     case 'campaigns.rename':
     case 'campaigns.archive':
     case 'campaigns.unarchive':
+    case 'campaigns.updateDescription':
     case 'runs.rename':
     case 'runs.archive':
     case 'runs.unarchive':
     case 'runs.cancel':
+    case 'actions.openCsvFile':
     case 'actions.openInFinder':
     case 'actions.openExternal':
     case 'actions.exportCsv':

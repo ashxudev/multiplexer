@@ -1,11 +1,26 @@
 import { z } from 'zod';
+import { app, dialog, shell } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
-import { app, dialog, shell } from 'electron';
 import { router, publicProcedure } from '../trpc';
 import { resolveCompoundPath } from '../../services/storage';
 
 export const actionsRouter = router({
+  openCsvFile: publicProcedure.mutation(async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      title: 'Load Molecule File',
+      filters: [{ name: 'Molecule Files', extensions: ['csv', 'tsv', 'txt', 'smi', 'smiles'] }],
+    });
+    if (result.canceled || result.filePaths.length === 0) {
+      return null;
+    }
+    const filePath = result.filePaths[0];
+    const content = await fs.promises.readFile(filePath, 'utf-8');
+    const fileName = path.basename(filePath);
+    return { content, fileName };
+  }),
+
   openInFinder: publicProcedure
     .input(z.object({ compoundId: z.string().uuid() }))
     .mutation(({ ctx, input }) => {

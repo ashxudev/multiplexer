@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type AppView = 'workspace' | 'settings' | 'new-campaign' | 'new-run';
+export type AppView = 'workspace' | 'settings' | 'new-campaign' | 'new-run' | 'campaign-detail';
 
 // Open sidebar is clamped to [SIDEBAR_MIN, SIDEBAR_MAX]; collapsed = 0.
 export const SIDEBAR_DEFAULT = 280;
