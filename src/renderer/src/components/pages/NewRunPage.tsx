@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { ArrowLeft, ChevronRight, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,12 +10,10 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/comp
 import { useAppStore } from '@/stores/useAppStore';
 import { trpc } from '@/api/trpc';
 import { CsvPreviewTable } from '@/components/forms/CsvPreviewTable';
+import { CsvColumnMapper } from '@/components/forms/CsvColumnMapper';
 import { useRdkit } from '@/components/shared/RdkitProvider';
-
-interface ParsedCompound {
-  name: string;
-  smiles: string;
-}
+import { parseCsvText, extractCompoundsFromColumns } from '@/lib/csv-parser';
+import type { ParsedCompound } from '@/types/compounds';
 
 function parseSmilesList(text: string): ParsedCompound[] {
   return text
@@ -50,13 +48,25 @@ export function NewRunPage() {
   const [error, setError] = useState<string | null>(null);
   const [paramsOpen, setParamsOpen] = useState(false);
 
+  // CSV file import state
+  const [fileCompounds, setFileCompounds] = useState<ParsedCompound[] | null>(null);
+  const [csvHeaders, setCsvHeaders] = useState<string[] | null>(null);
+  const [needsManualMapping, setNeedsManualMapping] = useState(false);
+  const [selectedSmilesCol, setSelectedSmilesCol] = useState<string | null>(null);
+  const [selectedNameCol, setSelectedNameCol] = useState<string | null>(null);
+  const [csvRawText, setCsvRawText] = useState<string | null>(null);
+  const [csvFileName, setCsvFileName] = useState<string | null>(null);
+
   // Parameters
   const [recyclingSteps, setRecyclingSteps] = useState(3);
   const [diffusionSamples, setDiffusionSamples] = useState(1);
   const [samplingSteps, setSamplingSteps] = useState(200);
   const [stepScale, setStepScale] = useState(1.5);
 
-  const compounds = useMemo(() => parseSmilesList(smilesText), [smilesText]);
+  const compounds = useMemo(() => {
+    if (fileCompounds) return fileCompounds;
+    return parseSmilesList(smilesText);
+  }, [fileCompounds, smilesText]);
 
   const invalidIndices = useMemo(() => {
     if (!rdkit || !rdkitReady) return new Set<number>();
@@ -110,18 +120,37 @@ export function NewRunPage() {
     }
   };
 
-  const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const text = ev.target?.result;
-      if (typeof text === 'string') {
-        setSmilesText(text);
-      }
-    };
-    reader.readAsText(file);
+  const openCsvFile = trpc.actions.openCsvFile.useMutation();
+
+  const handleLoadCsv = async () => {
+    const result = await openCsvFile.mutateAsync();
+    if (!result) return;
+
+    setCsvRawText(result.content);
+    setCsvFileName(result.fileName);
+
+    const parsed = parseCsvText(result.content);
+
+    if (parsed.needsManualMapping) {
+      setCsvHeaders(parsed.headers);
+      setNeedsManualMapping(true);
+      setSelectedSmilesCol(null);
+      setSelectedNameCol(null);
+      setFileCompounds(null);
+      return;
+    }
+
+    setNeedsManualMapping(false);
+    setCsvHeaders(null);
+    setFileCompounds(parsed.compounds);
   };
+
+  // Re-extract compounds when user selects columns in manual mapping mode
+  useEffect(() => {
+    if (!needsManualMapping || !csvRawText || !selectedSmilesCol) return;
+    const extracted = extractCompoundsFromColumns(csvRawText, selectedSmilesCol, selectedNameCol);
+    setFileCompounds(extracted);
+  }, [needsManualMapping, csvRawText, selectedSmilesCol, selectedNameCol]);
 
   if (!campaign) {
     return (
@@ -182,7 +211,14 @@ export function NewRunPage() {
             <Label>Compounds</Label>
             <div className="flex gap-1 rounded-md border border-border p-0.5">
               <button
-                onClick={() => setInputMode('paste')}
+                onClick={() => {
+                  setInputMode('paste');
+                  setFileCompounds(null);
+                  setCsvHeaders(null);
+                  setNeedsManualMapping(false);
+                  setCsvRawText(null);
+                  setCsvFileName(null);
+                }}
                 className={`rounded px-2 py-0.5 text-xs transition-colors ${
                   inputMode === 'paste'
                     ? 'bg-muted text-foreground'
@@ -192,7 +228,10 @@ export function NewRunPage() {
                 Paste
               </button>
               <button
-                onClick={() => setInputMode('csv')}
+                onClick={() => {
+                  setInputMode('csv');
+                  setSmilesText('');
+                }}
                 className={`rounded px-2 py-0.5 text-xs transition-colors ${
                   inputMode === 'csv'
                     ? 'bg-muted text-foreground'
@@ -213,7 +252,32 @@ export function NewRunPage() {
               className="font-mono text-sm"
             />
           ) : (
-            <Input type="file" accept=".csv,.tsv,.txt" onChange={handleCsvUpload} />
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLoadCsv}
+                  disabled={openCsvFile.isPending}
+                >
+                  <Upload className="h-4 w-4 mr-1.5" />
+                  {openCsvFile.isPending ? 'Loading…' : 'Load CSV'}
+                </Button>
+                {csvFileName && (
+                  <span className="text-xs text-muted-foreground truncate">{csvFileName}</span>
+                )}
+              </div>
+
+              {needsManualMapping && csvHeaders && (
+                <CsvColumnMapper
+                  headers={csvHeaders}
+                  smilesCol={selectedSmilesCol}
+                  nameCol={selectedNameCol}
+                  onSmilesColChange={setSelectedSmilesCol}
+                  onNameColChange={setSelectedNameCol}
+                />
+              )}
+            </div>
           )}
 
           {compounds.length > 0 && (

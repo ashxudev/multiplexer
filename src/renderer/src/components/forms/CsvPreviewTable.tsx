@@ -1,10 +1,6 @@
 import { AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface ParsedCompound {
-  name: string;
-  smiles: string;
-}
+import type { ParsedCompound } from "@/types/compounds";
 
 interface CsvPreviewTableProps {
   compounds: ParsedCompound[];
