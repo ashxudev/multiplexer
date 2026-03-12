@@ -22,6 +22,7 @@ agents.md
 AGENTS.md
 .claude/
 *plan*.md
+*shortlist*.md
 
 # Environment
 .env
