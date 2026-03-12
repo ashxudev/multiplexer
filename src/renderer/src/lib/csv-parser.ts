@@ -68,9 +68,22 @@ export function parseCsvText(text: string): CsvParseResult {
       };
     }
 
-    // No recognized headers — re-parse without headers so the first data
-    // row isn't silently consumed as column names
-    return parseHeaderless(text);
+    // No recognized headers — check if the first row looks like data
+    // (contains SMILES-like characters) rather than real column names.
+    // If so, re-parse without headers to preserve all rows.
+    const looksLikeData = fields.some((f) => /[()=\[\]@#]/.test(f) || /^\d+(\.\d+)?$/.test(f.trim()));
+    if (fields.length <= 2 || looksLikeData) {
+      return parseHeaderless(text);
+    }
+
+    // 3+ columns with text-like headers — keep as real column names for manual mapper
+    return {
+      compounds: [],
+      headers: fields,
+      detectedSmilesCol: null,
+      detectedNameCol: null,
+      needsManualMapping: true,
+    };
   }
 
   // No fields at all — try headerless

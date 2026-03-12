@@ -51,11 +51,15 @@ export function CampaignDetailPage() {
       setIsEditingName(false);
       return;
     }
-    await renameMutation.mutateAsync({
-      campaignId: campaign.id,
-      newName: editName.trim(),
-    });
-    await utils.campaigns.list.invalidate();
+    try {
+      await renameMutation.mutateAsync({
+        campaignId: campaign.id,
+        newName: editName.trim(),
+      });
+      await utils.campaigns.list.invalidate();
+    } catch {
+      // mutation error surfaced by renameMutation.error if needed
+    }
     setIsEditingName(false);
   };
 
@@ -70,11 +74,15 @@ export function CampaignDetailPage() {
       setDescriptionDirty(false);
       return;
     }
-    await descriptionMutation.mutateAsync({
-      campaignId: campaign.id,
-      description: value,
-    });
-    await utils.campaigns.list.invalidate();
+    try {
+      await descriptionMutation.mutateAsync({
+        campaignId: campaign.id,
+        description: value,
+      });
+      await utils.campaigns.list.invalidate();
+    } catch {
+      // mutation error surfaced by descriptionMutation.error if needed
+    }
     setDescriptionDirty(false);
   };
 
