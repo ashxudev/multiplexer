@@ -69,9 +69,11 @@ export function parseCsvText(text: string): CsvParseResult {
     }
 
     // No recognized headers — check if the first row looks like data
-    // (contains SMILES-like characters) rather than real column names.
-    // If so, re-parse without headers to preserve all rows.
-    const looksLikeData = fields.some((f) => /[()=\[\]@#]/.test(f) || /^\d+(\.\d+)?$/.test(f.trim()));
+    // (contains SMILES-like patterns) rather than real column names.
+    // Require letter/digit adjacent to a bond or bracket (e.g. "C(=O)", "c1ccc",
+    // "[NH]") to avoid false positives on headers like "Batch#" or "Notes (internal)".
+    const SMILES_PATTERN = /[A-Za-z]\(|[A-Za-z]\[|\][A-Za-z]|\d[a-z]|[a-z]\d|=[A-Z]/;
+    const looksLikeData = fields.some((f) => SMILES_PATTERN.test(f) || /^\d+(\.\d+)?$/.test(f.trim()));
     if (fields.length <= 2 || looksLikeData) {
       return parseHeaderless(text);
     }
