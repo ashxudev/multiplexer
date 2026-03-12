@@ -128,4 +128,21 @@ export const campaignsRouter = router({
       campaign.archived_at = null;
       ctx.services.state.markDirty();
     }),
+
+  updateDescription: publicProcedure
+    .input(
+      z.object({
+        campaignId: z.string().uuid(),
+        description: z.string().nullable(),
+      }),
+    )
+    .mutation(({ ctx, input }) => {
+      const { state } = ctx.services;
+      const campaign = state.findCampaign(input.campaignId);
+      if (!campaign) throw new Error('Campaign not found');
+
+      campaign.description = input.description;
+      state.markDirty();
+      persistState(state.rootDir, state.data);
+    }),
 });

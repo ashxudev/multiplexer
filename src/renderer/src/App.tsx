@@ -4,6 +4,7 @@ import { WorkspaceView } from '@/components/layout/WorkspaceView';
 import { SettingsPage } from '@/components/pages/SettingsPage';
 import { NewCampaignPage } from '@/components/pages/NewCampaignPage';
 import { NewRunPage } from '@/components/pages/NewRunPage';
+import { CampaignDetailPage } from '@/components/pages/CampaignDetailPage';
 import { useAppStore } from '@/stores/useAppStore';
 import { useBackendEvents } from '@/hooks/useBackendEvents';
 
@@ -64,6 +65,7 @@ function App() {
         {currentView === 'settings' && <SettingsPage />}
         {currentView === 'new-campaign' && <NewCampaignPage />}
         {currentView === 'new-run' && <NewRunPage />}
+        {currentView === 'campaign-detail' && <CampaignDetailPage />}
       </div>
     </div>
   );

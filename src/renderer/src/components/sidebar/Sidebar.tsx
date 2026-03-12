@@ -101,6 +101,7 @@ function CampaignItem({ campaign }: { campaign: Campaign }) {
           if (!expandedCampaignIds.has(campaign.id)) {
             toggleCampaignExpanded(campaign.id);
           }
+          setView('campaign-detail');
         }}
         className={cn(
           'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent/50',
