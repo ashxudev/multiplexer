@@ -7,6 +7,7 @@ import { resolveCompoundPath, persistState } from '../../services/storage';
 import {
   buildInferenceInput,
   buildInferenceOptions,
+  buildPredictionName,
 } from '../../services/boltz-client';
 import { humanizeError } from '../../services/humanize-error';
 import type {
@@ -84,7 +85,12 @@ export const compoundsRouter = router({
       const now = new Date().toISOString();
 
       try {
-        const resp = await client.submitPrediction(apiKey, inferenceInput, inferenceOptions);
+        const predictionName = buildPredictionName(
+          campaign.display_name,
+          run.display_name,
+          compound.display_name,
+        );
+        const resp = await client.submitPrediction(apiKey, inferenceInput, inferenceOptions, predictionName);
 
         compound.boltz_job_id = resp.prediction_id;
         compound.status = 'CREATED';

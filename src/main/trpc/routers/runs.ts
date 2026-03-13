@@ -14,6 +14,7 @@ import {
   BoltzApiError,
   buildInferenceInput,
   buildInferenceOptions,
+  buildPredictionName,
 } from '../../services/boltz-client';
 import { humanizeError } from '../../services/humanize-error';
 import type {
@@ -157,10 +158,16 @@ export const runsRouter = router({
           const now = new Date().toISOString();
 
           try {
+            const predictionName = buildPredictionName(
+              campaign.display_name,
+              run.display_name,
+              compound.display_name,
+            );
             const resp = await client.submitPrediction(
               apiKey,
               inferenceInput,
               inferenceOptions,
+              predictionName,
               { onRateLimited: triggerPause },
             );
 
