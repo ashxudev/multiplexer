@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import type {
   CompoundMetrics,
   AffinityMetrics,
@@ -124,13 +123,14 @@ export class BoltzClient {
     apiKey: string,
     inferenceInput: unknown,
     inferenceOptions: unknown,
+    predictionName: string,
     retryOpts?: RetryOptions,
   ): Promise<SubmitResponse> {
     const url = `${this.baseUrl}/api/v1/connect/predictions/boltz2`;
 
     return this.withRetry(async () => {
       const body = {
-        prediction_name: uuidv4(),
+        prediction_name: predictionName,
         prediction_inputs: {
           inference_input: inferenceInput,
           inference_options: inferenceOptions,
@@ -290,6 +290,36 @@ export function buildInferenceOptions(params: RunParams): unknown {
     sampling_steps: params.sampling_steps,
     step_scale: params.step_scale,
   };
+}
+
+// ── Prediction name builder ──────────────────────────────────────────
+
+const MAX_PREDICTION_NAME_LENGTH = 128;
+const SEPARATOR = ' - ';
+
+/**
+ * Build a human-readable prediction name: "Campaign - Run - Compound".
+ * Truncates the campaign name to fit within the max length.
+ */
+export function buildPredictionName(
+  campaignName: string,
+  runName: string,
+  compoundName: string,
+): string {
+  const fixedPart = `${runName}${SEPARATOR}${compoundName}`;
+  const budget = MAX_PREDICTION_NAME_LENGTH - fixedPart.length - SEPARATOR.length;
+
+  if (budget <= 0) {
+    // Campaign won't fit at all — just use run + compound
+    return fixedPart.slice(0, MAX_PREDICTION_NAME_LENGTH);
+  }
+
+  const campaign =
+    campaignName.length <= budget
+      ? campaignName
+      : campaignName.slice(0, budget - 1) + '\u2026'; // ellipsis: …
+
+  return `${campaign}${SEPARATOR}${fixedPart}`;
 }
 
 // ── Metrics parser ───────────────────────────────────────────────────
