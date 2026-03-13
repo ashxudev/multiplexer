@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Check, Pencil, X } from 'lucide-react';
+import { ArrowLeft, Pencil } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { useAppStore } from '@/stores/useAppStore';
 import { trpc } from '@/api/trpc';
 
@@ -27,6 +26,7 @@ export function CampaignDetailPage() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState('');
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const nameCancelledRef = useRef(false);
 
   // Editable description state
   const [description, setDescription] = useState('');
@@ -41,12 +41,14 @@ export function CampaignDetailPage() {
 
   const startEditingName = () => {
     if (!campaign) return;
+    nameCancelledRef.current = false;
     setEditName(campaign.display_name);
     setIsEditingName(true);
     setTimeout(() => nameInputRef.current?.select(), 0);
   };
 
   const saveName = async () => {
+    if (nameCancelledRef.current) return;
     if (!campaign || !editName.trim() || editName.trim() === campaign.display_name) {
       setIsEditingName(false);
       return;
@@ -64,6 +66,7 @@ export function CampaignDetailPage() {
   };
 
   const cancelEditName = () => {
+    nameCancelledRef.current = true;
     setIsEditingName(false);
   };
 
@@ -112,32 +115,26 @@ export function CampaignDetailPage() {
 
       <div className="mx-auto max-w-2xl space-y-6">
         {/* Campaign name — click to edit */}
-        <div className="group">
+        <div>
           {isEditingName ? (
             <div className="flex items-center gap-2">
-              <Input
+              <input
                 ref={nameInputRef}
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') saveName();
-                  if (e.key === 'Escape') cancelEditName();
+                  if (e.key === 'Enter') {
+                    e.currentTarget.blur();
+                  }
+                  if (e.key === 'Escape') {
+                    cancelEditName();
+                  }
                 }}
-                className="text-xl font-semibold h-auto py-1"
+                onBlur={saveName}
+                className="text-xl font-semibold bg-transparent outline-none rounded-md border border-ring ring-ring/50 ring-[3px] px-1.5 py-0.5 -ml-1.5 w-full"
                 autoFocus
               />
-              <button
-                onClick={saveName}
-                className="shrink-0 rounded-md p-1 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <Check className="h-4 w-4" />
-              </button>
-              <button
-                onClick={cancelEditName}
-                className="shrink-0 rounded-md p-1 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             </div>
           ) : (
             <button
@@ -145,7 +142,7 @@ export function CampaignDetailPage() {
               className="flex items-center gap-2 text-left"
             >
               <h1 className="text-xl font-semibold">{campaign.display_name}</h1>
-              <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             </button>
           )}
         </div>
