@@ -126,7 +126,7 @@ export function CompoundDetail({ compoundId }: { compoundId: string }) {
 
         <div className="space-y-4 px-4 py-4">
             {/* 3D Structure */}
-            {c.status === 'COMPLETED' && (
+            {!viewerExpanded && c.status === 'COMPLETED' && (
               <div className="space-y-1">
                 <div className="flex items-center gap-1">
                   <p className="text-sm font-medium">3D Structure</p>

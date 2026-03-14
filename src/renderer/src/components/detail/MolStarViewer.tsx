@@ -18,6 +18,8 @@ export function MolStarViewer({ compoundId, sampleIndex, className }: MolStarVie
   const pluginRef = useRef<{ canvas3d?: { setProps(p: unknown): void } | null; dispose(): void } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { resolved: structureMode } = useStructureTheme();
+  const structureModeRef = useRef(structureMode);
+  structureModeRef.current = structureMode;
 
   const cifQuery = trpc.compounds.getPoseCif.useQuery(
     { compoundId, sampleIndex },
@@ -54,7 +56,7 @@ export function MolStarViewer({ compoundId, sampleIndex, className }: MolStarVie
         if (cancelled) { plugin.dispose(); return; }
 
         plugin.canvas3d?.setProps({
-          renderer: { backgroundColor: structureMode === 'dark' ? BG_DARK : BG_LIGHT },
+          renderer: { backgroundColor: structureModeRef.current === 'dark' ? BG_DARK : BG_LIGHT },
         });
 
         // Register the pLDDT confidence color theme (from Mol*'s model-archive extension)
