@@ -5,20 +5,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAppStore } from '@/stores/useAppStore';
 import { useTheme, type Theme } from '@/hooks/useTheme';
+import { useStructureTheme, type StructureTheme } from '@/hooks/useStructureTheme';
 import { trpc } from '@/api/trpc';
 import { cn } from '@/lib/utils';
 
 type SettingsSection = 'general' | 'workspace' | 'appearance';
 
 const SECTIONS: { id: SettingsSection; label: string; icon: typeof Key }[] = [
-  { id: 'general', label: 'API Key', icon: Key },
-  { id: 'workspace', label: 'Workspace Directory', icon: FolderOpen },
   { id: 'appearance', label: 'Appearance', icon: Paintbrush },
+  { id: 'workspace', label: 'Workspace Directory', icon: FolderOpen },
+  { id: 'general', label: 'API Key', icon: Key },
 ];
 
 export function SettingsPage() {
   const setView = useAppStore((s) => s.setView);
-  const [activeSection, setActiveSection] = useState<SettingsSection>('general');
+  const [activeSection, setActiveSection] = useState<SettingsSection>('appearance');
 
   return (
     <div className="flex h-full bg-sidebar">
@@ -241,8 +242,15 @@ function WorkspaceSettings() {
 
 function AppearanceSettings() {
   const { theme, setTheme } = useTheme();
+  const { structureTheme, setStructureTheme } = useStructureTheme();
 
-  const options: { value: Theme; label: string; icon: typeof Sun }[] = [
+  const themeOptions: { value: Theme; label: string; icon: typeof Sun }[] = [
+    { value: 'light', label: 'Light', icon: Sun },
+    { value: 'dark', label: 'Dark', icon: Moon },
+    { value: 'system', label: 'System', icon: Monitor },
+  ];
+
+  const structureOptions: { value: StructureTheme; label: string; icon: typeof Sun }[] = [
     { value: 'light', label: 'Light', icon: Sun },
     { value: 'dark', label: 'Dark', icon: Moon },
     { value: 'system', label: 'System', icon: Monitor },
@@ -258,13 +266,37 @@ function AppearanceSettings() {
       <div className="space-y-2">
         <Label>Theme</Label>
         <div className="flex gap-1 rounded-md border border-border p-1 w-fit">
-          {options.map((opt) => (
+          {themeOptions.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setTheme(opt.value)}
               className={cn(
                 'flex items-center gap-1.5 rounded px-3 py-1.5 text-sm transition-colors',
                 theme === opt.value
+                  ? 'bg-muted text-foreground font-medium'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              <opt.icon className="h-4 w-4" />
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Structure Viewer</Label>
+        <p className="text-xs text-muted-foreground">
+          Controls the 3D and 2D structure rendering background. "System" follows your theme above.
+        </p>
+        <div className="flex gap-1 rounded-md border border-border p-1 w-fit">
+          {structureOptions.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setStructureTheme(opt.value)}
+              className={cn(
+                'flex items-center gap-1.5 rounded px-3 py-1.5 text-sm transition-colors',
+                structureTheme === opt.value
                   ? 'bg-muted text-foreground font-medium'
                   : 'text-muted-foreground hover:text-foreground',
               )}

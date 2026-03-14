@@ -26,6 +26,14 @@ fi
 export MULTIPLEXER_ROOT_DIR="/tmp/multiplexer-data-$CDP_PORT"
 mkdir -p "$MULTIPLEXER_ROOT_DIR"
 
+# ── Detect macOS dark mode ──────────────────────────────────────────
+#   nohup & can lose the connection to macOS WindowServer, causing
+#   nativeTheme.shouldUseDarkColors to report false even in dark mode.
+#   Pass hint via env var; the main process reads it to set themeSource.
+if defaults read -g AppleInterfaceStyle &>/dev/null; then
+  export MULTIPLEXER_FORCE_DARK=1
+fi
+
 # ── Launch electron-vite dev (fully detached) ───────────────────────
 #   --remoteDebuggingPort: first-class electron-vite flag for CDP
 #   --user-data-dir: isolates Electron profile (prefs, session, cache)
