@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { ArrowUpDown, ArrowUp, ArrowDown, Download } from 'lucide-react';
 import Papa from 'papaparse';
 import { trpc } from '@/api/trpc';
@@ -30,6 +30,18 @@ export function ResultsTable({
 
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  // Auto-select the first compound when the run first loads.
+  // Uses a ref to avoid re-selecting after the user closes the detail panel.
+  const hasAutoSelected = useRef(false);
+  useEffect(() => { hasAutoSelected.current = false; }, [runId]);
+  useEffect(() => {
+    const compounds = run.data?.compounds;
+    if (compounds?.length && !hasAutoSelected.current) {
+      hasAutoSelected.current = true;
+      selectCompound(compounds[0].id);
+    }
+  }, [run.data?.compounds, selectCompound]);
 
   useEffect(() => {
     if (!showAffinity && (sortColumn === 'binding_confidence' || sortColumn === 'optimization_score')) {

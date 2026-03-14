@@ -427,7 +427,7 @@ function ParamSlider({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Label className="text-xs border-b border-dotted border-muted-foreground cursor-help">{label}</Label>
+          <Label className="text-xs border-b border-dotted border-muted-foreground">{label}</Label>
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-xs">{tooltip}</TooltipContent>
       </Tooltip>

@@ -1,22 +1,32 @@
 import { useEffect, useRef, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Color } from 'molstar/lib/mol-util/color';
+import { PLDDTConfidenceColorThemeProvider } from 'molstar/lib/extensions/model-archive/quality-assessment/color/plddt';
 import { trpc } from '@/api/trpc';
+import { useStructureTheme } from '@/hooks/useStructureTheme';
 
 interface MolStarViewerProps {
   compoundId: string;
   sampleIndex: number;
+  className?: string;
 }
 
-export function MolStarViewer({ compoundId, sampleIndex }: MolStarViewerProps) {
+const BG_DARK = Color(0x000000);
+const BG_LIGHT = Color(0xFFFFFF);
+
+export function MolStarViewer({ compoundId, sampleIndex, className }: MolStarViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [loading, setLoading] = useState(true);
+  const pluginRef = useRef<{ canvas3d?: { setProps(p: unknown): void } | null; dispose(): void } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { resolved: structureMode } = useStructureTheme();
+  const structureModeRef = useRef(structureMode);
+  structureModeRef.current = structureMode;
 
   const cifQuery = trpc.compounds.getPoseCif.useQuery(
     { compoundId, sampleIndex },
     { enabled: !!compoundId },
   );
 
+  // ── Initialize Mol* and load structure ──────────────────
   useEffect(() => {
     if (!cifQuery.data) return;
 
@@ -24,10 +34,8 @@ export function MolStarViewer({ compoundId, sampleIndex }: MolStarViewerProps) {
     const container = containerRef.current;
     if (!container) return;
 
-    setLoading(true);
-    setError(null);
 
-    let pluginRef: { dispose(): void } | null = null;
+    setError(null);
 
     async function init() {
       try {
@@ -36,7 +44,7 @@ export function MolStarViewer({ compoundId, sampleIndex }: MolStarViewerProps) {
         if (cancelled) return;
 
         const plugin = new PluginContext(DefaultPluginSpec());
-        pluginRef = plugin;
+        pluginRef.current = plugin;
         await plugin.init();
         if (cancelled) { plugin.dispose(); return; }
 
@@ -47,6 +55,13 @@ export function MolStarViewer({ compoundId, sampleIndex }: MolStarViewerProps) {
         await plugin.initViewerAsync(canvas, container!);
         if (cancelled) { plugin.dispose(); return; }
 
+        plugin.canvas3d?.setProps({
+          renderer: { backgroundColor: structureModeRef.current === 'dark' ? BG_DARK : BG_LIGHT },
+        });
+
+        // Register the pLDDT confidence color theme (from Mol*'s model-archive extension)
+        plugin.representation.structure.themes.colorThemeRegistry.add(PLDDTConfidenceColorThemeProvider);
+
         const data = await plugin.builders.data.rawData({
           data: cifQuery.data,
           label: 'structure',
@@ -54,12 +69,23 @@ export function MolStarViewer({ compoundId, sampleIndex }: MolStarViewerProps) {
         const trajectory = await plugin.builders.structure.parseTrajectory(data, 'mmcif');
         await plugin.builders.structure.hierarchy.applyPreset(trajectory, 'default');
 
+        // Apply pLDDT confidence coloring (discrete AlphaFold palette)
+        if (!cancelled) {
+          const structures = plugin.managers.structure.hierarchy.current.structures;
+          for (const s of structures) {
+            await plugin.managers.structure.component.updateRepresentationsTheme(
+              s.components,
+              { color: PLDDTConfidenceColorThemeProvider.name as any } as any,
+            );
+          }
+        }
+
         if (cancelled) { plugin.dispose(); return; }
-        setLoading(false);
+
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : String(e));
-          setLoading(false);
+  
         }
       }
     }
@@ -68,14 +94,22 @@ export function MolStarViewer({ compoundId, sampleIndex }: MolStarViewerProps) {
 
     return () => {
       cancelled = true;
-      pluginRef?.dispose();
+      pluginRef.current?.dispose();
+      pluginRef.current = null;
       if (container) container.innerHTML = '';
     };
   }, [cifQuery.data]);
 
+  // ── Update background color when structure theme changes ─
+  useEffect(() => {
+    pluginRef.current?.canvas3d?.setProps({
+      renderer: { backgroundColor: structureMode === 'dark' ? BG_DARK : BG_LIGHT },
+    });
+  }, [structureMode]);
+
   if (cifQuery.isError) {
     return (
-      <div className="flex h-48 items-center justify-center rounded-md border border-dashed border-border bg-surface/50">
+      <div className="flex items-center justify-center rounded-md border border-dashed border-border bg-surface/50">
         <span className="text-xs text-red-400">Failed to load structure</span>
       </div>
     );
@@ -83,23 +117,18 @@ export function MolStarViewer({ compoundId, sampleIndex }: MolStarViewerProps) {
 
   if (error) {
     return (
-      <div className="flex h-48 items-center justify-center rounded-md border border-dashed border-border bg-surface/50">
+      <div className="flex items-center justify-center rounded-md border border-dashed border-border bg-surface/50">
         <span className="text-xs text-red-400">{error}</span>
       </div>
     );
   }
 
   return (
-    <div className="relative">
+    <div className={`relative ${className ?? 'h-48'}`}>
       <div
         ref={containerRef}
-        className="h-48 rounded-md border border-border bg-surface"
+        className={`h-full overflow-hidden rounded-md border border-border ${structureMode === 'dark' ? 'bg-black' : 'bg-white'}`}
       />
-      {loading && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-md bg-surface/80">
-          <Loader2 className="h-5 w-5 animate-spin text-subtle" />
-        </div>
-      )}
     </div>
   );
 }
