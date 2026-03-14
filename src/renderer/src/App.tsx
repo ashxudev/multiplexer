@@ -1,6 +1,10 @@
 import { useEffect } from 'react';
 import { TopBar } from '@/components/layout/TopBar';
 import { WorkspaceView } from '@/components/layout/WorkspaceView';
+
+// Preload Mol* modules so the 3D viewer renders instantly on first open
+import('molstar/lib/mol-plugin/context');
+import('molstar/lib/mol-plugin/spec');
 import { SettingsPage } from '@/components/pages/SettingsPage';
 import { NewCampaignPage } from '@/components/pages/NewCampaignPage';
 import { NewRunPage } from '@/components/pages/NewRunPage';

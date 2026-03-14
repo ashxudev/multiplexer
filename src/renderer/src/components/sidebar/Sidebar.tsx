@@ -6,6 +6,7 @@ import {
   ArchiveRestore,
   CheckCircle2,
   Loader2,
+  Settings,
   XCircle,
 } from 'lucide-react';
 import { useMemo } from 'react';
@@ -98,28 +99,28 @@ function CampaignItem({ campaign }: { campaign: Campaign }) {
       <button
         onClick={() => {
           selectCampaign(campaign.id);
-          if (!expandedCampaignIds.has(campaign.id)) {
-            toggleCampaignExpanded(campaign.id);
-          }
-          setView('campaign-detail');
+          toggleCampaignExpanded(campaign.id);
         }}
         className={cn(
-          'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent/50',
-          isSelected && 'bg-accent text-foreground',
+          'group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent/50',
         )}
       >
         <ChevronRight
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleCampaignExpanded(campaign.id);
-          }}
           className={cn(
-            'h-3.5 w-3.5 shrink-0 text-subtle transition-transform cursor-pointer hover:text-dim',
+            'h-3.5 w-3.5 shrink-0 text-subtle transition-transform',
             isExpanded && 'rotate-90',
           )}
         />
         <FlaskConical className="h-3.5 w-3.5 shrink-0 text-subtle" />
         <span className="truncate font-medium">{campaign.display_name}</span>
+        <Settings
+          onClick={(e) => {
+            e.stopPropagation();
+            selectCampaign(campaign.id);
+            setView('campaign-detail');
+          }}
+          className="ml-auto h-3.5 w-3.5 shrink-0 text-subtle cursor-pointer hover:text-dim transition-colors"
+        />
       </button>
 
       {isExpanded && (

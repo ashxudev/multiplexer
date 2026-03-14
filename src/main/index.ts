@@ -5,6 +5,12 @@ import { appRouter } from './trpc/router';
 import { createContext } from './trpc/context';
 import { AppServices } from './services';
 
+// Dev/Playwright: nohup & can lose macOS WindowServer dark mode detection.
+// The dev.sh script detects dark mode and sets MULTIPLEXER_FORCE_DARK=1.
+if (process.env.MULTIPLEXER_FORCE_DARK) {
+  nativeTheme.themeSource = 'dark';
+}
+
 let mainWindow: BrowserWindow | null = null;
 let services: AppServices | null = null;
 

@@ -200,7 +200,7 @@ export function WorkspaceView() {
               id="detail"
               order={3}
               defaultSize={25}
-              minSize={20}
+              minSize={25}
               maxSize={detailMaxPct}
             >
               <CompoundDetail compoundId={selectedCompoundId} />
