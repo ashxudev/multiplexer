@@ -57,7 +57,7 @@ function RunProgressSummary({ run }: { run: Run }) {
   const total = run.compounds.length;
 
   return (
-    <div className="flex items-center gap-1.5 text-xs text-subtle">
+    <div className="flex shrink-0 items-center gap-1.5 text-xs text-subtle">
       {completed > 0 && (
         <span className="flex items-center gap-0.5 text-emerald-500">
           <CheckCircle2 className="h-3 w-3" />
@@ -124,7 +124,7 @@ function CampaignItem({ campaign }: { campaign: Campaign }) {
       </button>
 
       {isExpanded && (
-        <div className="ml-4 mt-0.5 space-y-0.5 border-l border-border pl-3">
+        <div className="ml-4 mt-0.5 space-y-0.5 overflow-hidden border-l border-border pl-3">
           {activeRuns.map((run) => (
             <button
               key={run.id}
@@ -134,11 +134,11 @@ function CampaignItem({ campaign }: { campaign: Campaign }) {
                 setView('workspace');
               }}
               className={cn(
-                'flex w-full items-center justify-between rounded-md px-2 py-1 text-left text-sm transition-colors hover:bg-accent/50',
+                'flex w-full items-center gap-1 rounded-md px-2 py-1 text-left text-sm transition-colors hover:bg-accent/50',
                 selectedRunId === run.id && 'bg-accent text-foreground',
               )}
             >
-              <span className="truncate text-dim">{run.display_name}</span>
+              <span className="flex-1 min-w-0 truncate text-dim">{run.display_name}</span>
               <RunProgressSummary run={run} />
             </button>
           ))}
@@ -229,7 +229,7 @@ export function Sidebar() {
   return (
     <aside className="flex h-full flex-col bg-sidebar">
       {/* Drag region + New Campaign */}
-      <div className="h-3 shrink-0" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties} />
+      <div className="h-2 shrink-0" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties} />
       <div className="px-3 pb-2">
         <button
           onClick={() => setView('new-campaign')}
@@ -243,7 +243,7 @@ export function Sidebar() {
       <Separator className="bg-border" />
 
       {/* Campaign list */}
-      <ScrollArea className="flex-1 px-2 py-2">
+      <ScrollArea className="flex-1 px-2 py-2" viewportClassName="[&>div]:!block">
         <div className="space-y-0.5">
           {activeCampaigns.map((campaign) => (
             <CampaignItem key={campaign.id} campaign={campaign} />

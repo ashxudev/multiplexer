@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
-import { ArrowUpDown, ArrowUp, ArrowDown, Download } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, Download, Pencil } from 'lucide-react';
 import Papa from 'papaparse';
 import { trpc } from '@/api/trpc';
 import { useAppStore } from '@/stores/useAppStore';
 import { useRdkit } from '@/components/shared/RdkitProvider';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 type SortColumn = 'status' | 'compound' | 'confidence' | 'complex_plddt' | 'iptm' | 'ptm' | 'binding_confidence' | 'optimization_score';
@@ -25,11 +24,48 @@ export function ResultsTable({
   const selectedCompoundId = useAppStore((s) => s.selectedCompoundId);
   const { rdkit, ready: rdkitReady } = useRdkit();
   const exportCsv = trpc.actions.exportCsv.useMutation();
+  const renameMutation = trpc.runs.rename.useMutation();
+  const utils = trpc.useUtils();
 
   const showAffinity = targetType === 'protein';
 
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  // Inline run-name editing
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editName, setEditName] = useState('');
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const nameCancelledRef = useRef(false);
+
+  const startEditingName = () => {
+    if (!run.data) return;
+    nameCancelledRef.current = false;
+    setEditName(run.data.display_name);
+    setIsEditingName(true);
+    setTimeout(() => nameInputRef.current?.select(), 0);
+  };
+
+  const saveName = async () => {
+    if (nameCancelledRef.current) return;
+    if (!run.data || !editName.trim() || editName.trim() === run.data.display_name) {
+      setIsEditingName(false);
+      return;
+    }
+    try {
+      await renameMutation.mutateAsync({ runId, newName: editName.trim() });
+      await utils.runs.get.invalidate({ runId });
+      await utils.campaigns.list.invalidate();
+    } catch {
+      // mutation error surfaced by renameMutation.error if needed
+    }
+    setIsEditingName(false);
+  };
+
+  const cancelEditName = () => {
+    nameCancelledRef.current = true;
+    setIsEditingName(false);
+  };
 
   // Auto-select the first compound when the run first loads.
   // Uses a ref to avoid re-selecting after the user closes the detail panel.
@@ -219,16 +255,39 @@ export function ResultsTable({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-end border-b border-border px-4 py-1.5">
-        <Button
-          variant="ghost"
-          size="xs"
+      <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+        <div className="min-w-0 flex-1">
+          {isEditingName ? (
+            <input
+              ref={nameInputRef}
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.currentTarget.blur();
+                if (e.key === 'Escape') cancelEditName();
+              }}
+              onBlur={saveName}
+              className="text-sm font-medium bg-transparent outline-none rounded-md border border-ring ring-ring/50 ring-[3px] px-1.5 py-0.5 -ml-1.5 w-full"
+              autoFocus
+            />
+          ) : (
+            <button
+              onClick={startEditingName}
+              className="group flex items-center gap-1.5 max-w-full text-sm font-medium text-muted-foreground hover:text-foreground rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors hover:bg-accent/50"
+            >
+              <span className="truncate">{run.data.display_name}</span>
+              <Pencil className="h-3 w-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+          )}
+        </div>
+        <button
           onClick={handleExportCsv}
           disabled={exportCsv.isPending || !run.data?.compounds.length}
+          className="flex shrink-0 items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:pointer-events-none"
         >
-          <Download className="h-3.5 w-3.5" />
+          <Download className="size-3" />
           Export CSV
-        </Button>
+        </button>
       </div>
       <div className="flex-1 overflow-auto">
       <table className="w-full text-sm">
@@ -236,7 +295,7 @@ export function ResultsTable({
           <tr>
             <SortHeader column="status" label="Status" align="left" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
             <SortHeader column="compound" label="Compound" align="left" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
-            <th className="px-4 py-2 text-left font-medium text-muted-foreground">SMILES</th>
+            <th className="px-4 py-2 text-left font-medium text-foreground">SMILES</th>
             {showAffinity && (
               <>
                 <SortHeader column="binding_confidence" label={<span className="text-left">Binding<br/>Confidence</span>} align="center" activeColumn={sortColumn} sortDir={sortDir} onSort={handleSort} />
@@ -325,7 +384,7 @@ function SortHeader({
   const Icon = isActive ? (sortDir === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown;
 
   return (
-    <th className={cn("px-4 py-2 font-medium text-muted-foreground", { 'text-right': align === 'right', 'text-left': align === 'left', 'text-center': align === 'center' })}>
+    <th className={cn("px-4 py-2 font-medium text-foreground", { 'text-right': align === 'right', 'text-left': align === 'left', 'text-center': align === 'center' })}>
       <button
         onClick={() => onSort(column)}
         className={cn("inline-flex items-center gap-1 hover:text-foreground transition-colors", align === 'center' && "mx-auto")}

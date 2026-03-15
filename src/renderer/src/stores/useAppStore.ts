@@ -46,19 +46,22 @@ export const useAppStore = create<AppState>()(
       selectedSampleIndex: 0,
 
       selectCampaign: (id) =>
-        set({
+        set((state) => ({
           selectedCampaignId: id,
-          selectedRunId: null,
-          selectedCompoundId: null,
-          selectedSampleIndex: 0,
-        }),
+          // Only clear run/compound when switching to a different campaign
+          ...(id !== state.selectedCampaignId && {
+            selectedRunId: null,
+            selectedCompoundId: null,
+            selectedSampleIndex: 0,
+          }),
+        })),
 
       selectRun: (id) =>
-        set({
+        set((state) => ({
           selectedRunId: id,
-          selectedCompoundId: null,
-          selectedSampleIndex: 0,
-        }),
+          // Only clear compound selection when switching to a different run
+          ...(id !== state.selectedRunId && { selectedCompoundId: null, selectedSampleIndex: 0 }),
+        })),
 
       selectCompound: (id) =>
         set({ selectedCompoundId: id, selectedSampleIndex: 0 }),
