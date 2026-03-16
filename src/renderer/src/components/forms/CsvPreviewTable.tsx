@@ -12,9 +12,9 @@ export function CsvPreviewTable({ compounds, errors, invalidIndices }: CsvPrevie
   return (
     <div className="space-y-2">
       {errors && errors.length > 0 && (
-        <div className="rounded-md border border-amber-900/50 bg-amber-950/30 p-2">
+        <div className="rounded-md border bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-900/50 p-2">
           {errors.map((err, i) => (
-            <p key={i} className="text-xs text-amber-400">{err}</p>
+            <p key={i} className="text-xs text-amber-600 dark:text-amber-400">{err}</p>
           ))}
         </div>
       )}
@@ -34,7 +34,7 @@ export function CsvPreviewTable({ compounds, errors, invalidIndices }: CsvPrevie
                 className={cn(
                   "border-t border-border/50",
                   invalidIndices?.has(i)
-                    ? "bg-red-950/30"
+                    ? "bg-red-50 dark:bg-red-950/30"
                     : i % 2 === 0
                       ? "bg-background"
                       : "bg-surface/30"
@@ -45,13 +45,13 @@ export function CsvPreviewTable({ compounds, errors, invalidIndices }: CsvPrevie
                 <td
                   className={cn(
                     "max-w-[200px] truncate px-3 py-1 font-mono text-subtle",
-                    invalidIndices?.has(i) && "text-red-400"
+                    invalidIndices?.has(i) && "text-red-600 dark:text-red-400"
                   )}
                   title={c.smiles}
                 >
                   <span className="flex items-center gap-1">
                     {invalidIndices?.has(i) && (
-                      <AlertTriangle className="h-3 w-3 shrink-0 text-red-400" />
+                      <AlertTriangle className="h-3 w-3 shrink-0 text-red-600 dark:text-red-400" />
                     )}
                     <span className="truncate">{c.smiles}</span>
                   </span>
