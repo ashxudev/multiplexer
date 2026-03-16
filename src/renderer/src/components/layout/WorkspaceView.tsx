@@ -189,7 +189,6 @@ export function WorkspaceView() {
                 runId={selectedRunId}
                 targetType={selectedCampaignMeta.targetType}
                 campaignName={selectedCampaignMeta.campaignName}
-                targetSequence={selectedCampaignMeta.targetSequence}
               />
             ) : (
               <div className="flex h-full flex-col items-center justify-center gap-8">

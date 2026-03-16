@@ -3,7 +3,6 @@ import { ArrowUpDown, ArrowUp, ArrowDown, Download, Pencil } from 'lucide-react'
 import Papa from 'papaparse';
 import { trpc } from '@/api/trpc';
 import { useAppStore } from '@/stores/useAppStore';
-import { useRdkit } from '@/components/shared/RdkitProvider';
 import { cn } from '@/lib/utils';
 
 type SortColumn = 'status' | 'compound' | 'confidence' | 'complex_plddt' | 'iptm' | 'ptm' | 'binding_confidence' | 'optimization_score';
@@ -12,17 +11,14 @@ export function ResultsTable({
   runId,
   targetType = 'protein',
   campaignName = '',
-  targetSequence = '',
 }: {
   runId: string;
   targetType?: string;
   campaignName?: string;
-  targetSequence?: string;
 }) {
   const run = trpc.runs.get.useQuery({ runId });
   const selectCompound = useAppStore((s) => s.selectCompound);
   const selectedCompoundId = useAppStore((s) => s.selectedCompoundId);
-  const { rdkit, ready: rdkitReady } = useRdkit();
   const exportCsv = trpc.actions.exportCsv.useMutation();
   const renameMutation = trpc.runs.rename.useMutation();
   const utils = trpc.useUtils();
@@ -181,91 +177,44 @@ export function ResultsTable({
     if (!run.data) return;
 
     const runName = run.data.display_name;
-    const params = run.data.params;
-
-    // Metadata header rows (# prefixed)
-    const seq = targetSequence.length > 50 ? targetSequence.slice(0, 50) + '...' : targetSequence;
-    const metaLines = [
-      `# Campaign: ${campaignName}`,
-      `# Target Type: ${targetType}`,
-      `# Target Sequence: ${seq}`,
-      `# Run: ${runName}`,
-      `# Parameters: recycling_steps=${params.recycling_steps}, diffusion_samples=${params.diffusion_samples}, sampling_steps=${params.sampling_steps}, step_scale=${params.step_scale}`,
-      `# Exported: ${new Date().toISOString()}`,
-      `# Model: Boltz-2`,
-    ];
 
     // Column headers
     const headers = [
-      'Rank', 'Name', 'SMILES', 'Status',
+      'Name', 'SMILES', 'Status',
       'Structure Confidence', 'Complex pLDDT', 'ipTM', 'pTM',
     ];
     if (showAffinity) headers.push('Binding Confidence', 'Optimization Score');
-    headers.push('MW', 'CLogP', 'TPSA', 'HBA', 'HBD', 'Rotatable Bonds');
 
     // Build rows using current sort order
-    const rows = sortedCompounds.map((compound, index) => {
+    const fmt = (v: number | null | undefined): string | null => v != null ? v.toFixed(2) : null;
+    const rows = sortedCompounds.map((compound) => {
       const sample = compound.metrics?.samples[0] ?? null;
       const affinity = compound.metrics?.affinity ?? null;
 
-      // RDKit: canonical SMILES + descriptors
-      let canonSmiles = compound.smiles;
-      let mw: number | null = null;
-      let clogp: number | null = null;
-      let tpsa: number | null = null;
-      let hba: number | null = null;
-      let hbd: number | null = null;
-      let rotBonds: number | null = null;
-
-      if (rdkit && rdkitReady) {
-        try {
-          const mol = rdkit.get_mol(compound.smiles);
-          if (mol) {
-            try {
-              canonSmiles = mol.get_smiles();
-              const desc = JSON.parse(mol.get_descriptors());
-              mw = desc.exactmw ?? null;
-              clogp = desc.CrippenClogP ?? null;
-              tpsa = desc.tpsa ?? null;
-              hba = desc.NumHBA ?? null;
-              hbd = desc.NumHBD ?? null;
-              rotBonds = desc.NumRotatableBonds ?? null;
-            } finally {
-              mol.delete();
-            }
-          }
-        } catch {
-          // RDKit failure — leave descriptor cells empty
-        }
-      }
-
       const row: (string | number | null)[] = [
-        index + 1,
         compound.display_name,
-        canonSmiles,
+        compound.smiles,
         compound.status,
-        sample?.structure_confidence ?? null,
-        sample?.complex_plddt ?? null,
-        sample?.iptm ?? null,
-        sample?.ptm ?? null,
+        fmt(sample?.structure_confidence),
+        fmt(sample?.complex_plddt),
+        fmt(sample?.iptm),
+        fmt(sample?.ptm),
       ];
       if (showAffinity) {
-        row.push(affinity?.binding_confidence ?? null, affinity?.optimization_score ?? null);
+        row.push(fmt(affinity?.binding_confidence), fmt(affinity?.optimization_score));
       }
-      row.push(mw, clogp, tpsa, hba, hbd, rotBonds);
       return row;
     });
 
-    const csvData = Papa.unparse({ fields: headers, data: rows });
-    const fullCsv = metaLines.join('\n') + '\n' + csvData;
+    const fullCsv = Papa.unparse({ fields: headers, data: rows });
 
     // Sanitized default filename
-    const sanitize = (s: string) => s.replace(/[^a-zA-Z0-9_-]/g, '-').replace(/-+/g, '-').slice(0, 50);
-    const dateStr = new Date().toISOString().slice(0, 10);
+    const sanitize = (s: string) => s.replace(/[^a-zA-Z0-9_]/g, '_').replace(/_+/g, '_').slice(0, 50);
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '_');
     const defaultFilename = `${sanitize(campaignName)}_${sanitize(runName)}_${dateStr}.csv`;
 
     exportCsv.mutate({ csvContent: fullCsv, defaultFilename });
-  }, [run.data, sortedCompounds, showAffinity, rdkit, rdkitReady, campaignName, targetType, targetSequence, exportCsv]);
+  }, [run.data, sortedCompounds, showAffinity, campaignName, exportCsv]);
 
   if (run.isLoading) {
     return (
