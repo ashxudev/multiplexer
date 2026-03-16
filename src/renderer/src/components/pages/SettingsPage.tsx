@@ -30,7 +30,7 @@ export function SettingsPage() {
         <div className="px-3 pt-4 pb-2">
           <button
             onClick={() => setView('workspace')}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-accent/50 mb-2"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-accent/50 mb-2 outline-none"
           >
             <ArrowLeft className="size-4" />
             Back
@@ -44,7 +44,7 @@ export function SettingsPage() {
               key={s.id}
               onClick={() => setActiveSection(s.id)}
               className={cn(
-                'flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm transition-colors',
+                'flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm transition-colors outline-none',
                 activeSection === s.id
                   ? 'bg-accent text-foreground font-medium'
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
@@ -166,7 +166,7 @@ function GeneralSettings() {
           {verifyStatus === 'loading' && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
           {verifyStatus === 'success' && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
           {verifyStatus === 'error' && (
-            <button type="button" onClick={handleRetry} className="flex items-center gap-1 text-red-400 hover:text-red-300 transition-colors">
+            <button type="button" onClick={handleRetry} className="flex items-center gap-1 text-red-400 hover:text-red-300 transition-colors outline-none">
               <XCircle className="h-3.5 w-3.5" />
               <span className="text-xs">Retry</span>
             </button>
@@ -183,7 +183,7 @@ function GeneralSettings() {
           <button
             type="button"
             onClick={() => setShowKey(!showKey)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors outline-none"
           >
             {showKey ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
           </button>
@@ -274,7 +274,7 @@ function AppearanceSettings() {
               key={opt.value}
               onClick={() => setTheme(opt.value)}
               className={cn(
-                'flex items-center gap-1.5 rounded px-3 py-1.5 text-sm transition-colors',
+                'flex items-center gap-1.5 rounded px-3 py-1.5 text-sm transition-colors outline-none',
                 theme === opt.value
                   ? 'bg-muted text-foreground font-medium'
                   : 'text-muted-foreground hover:text-foreground',
@@ -298,7 +298,7 @@ function AppearanceSettings() {
               key={opt.value}
               onClick={() => setStructureTheme(opt.value)}
               className={cn(
-                'flex items-center gap-1.5 rounded px-3 py-1.5 text-sm transition-colors',
+                'flex items-center gap-1.5 rounded px-3 py-1.5 text-sm transition-colors outline-none',
                 structureTheme === opt.value
                   ? 'bg-muted text-foreground font-medium'
                   : 'text-muted-foreground hover:text-foreground',

@@ -252,7 +252,7 @@ export function ResultsTable({
           ) : (
             <button
               onClick={startEditingName}
-              className="group flex items-center gap-1.5 max-w-full text-sm font-medium text-muted-foreground hover:text-foreground rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors hover:bg-accent/50"
+              className="group flex items-center gap-1.5 max-w-full text-sm font-medium text-muted-foreground hover:text-foreground rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors hover:bg-accent/50 outline-none"
             >
               <span className="truncate">{run.data.display_name}</span>
               <Pencil className="h-3 w-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -262,7 +262,7 @@ export function ResultsTable({
         <button
           onClick={handleExportCsv}
           disabled={exportCsv.isPending || !run.data?.compounds.length}
-          className="flex shrink-0 items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:pointer-events-none"
+          className="flex shrink-0 items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:pointer-events-none outline-none"
         >
           <Download className="size-3" />
           Export CSV
@@ -367,7 +367,7 @@ function SortHeader({
     <th className={cn("px-4 py-2 font-medium text-foreground", { 'text-right': align === 'right', 'text-left': align === 'left', 'text-center': align === 'center' })}>
       <button
         onClick={() => onSort(column)}
-        className={cn("inline-flex items-center gap-1 hover:text-foreground transition-colors", align === 'center' && "mx-auto")}
+        className={cn("inline-flex items-center gap-1 hover:text-foreground transition-colors outline-none", align === 'center' && "mx-auto")}
       >
         {label}
         <Icon className={cn("h-3 w-3", !isActive && "opacity-40")} />

@@ -217,7 +217,7 @@ export function NewRunPage() {
     <div className="h-full overflow-auto p-6">
       <button
         onClick={() => setView('workspace')}
-        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 outline-none"
       >
         <ArrowLeft className="h-4 w-4" />
         Back
@@ -272,7 +272,7 @@ export function NewRunPage() {
                   setCsvRawText(null);
                   setCsvFileName(null);
                 }}
-                className={`rounded px-2 py-0.5 text-xs transition-colors ${
+                className={`rounded px-2 py-0.5 text-xs transition-colors outline-none ${
                   inputMode === 'paste'
                     ? 'bg-muted text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
@@ -285,7 +285,7 @@ export function NewRunPage() {
                   setInputMode('csv');
                   setSmilesText('');
                 }}
-                className={`rounded px-2 py-0.5 text-xs transition-colors ${
+                className={`rounded px-2 py-0.5 text-xs transition-colors outline-none ${
                   inputMode === 'csv'
                     ? 'bg-muted text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
@@ -366,7 +366,7 @@ export function NewRunPage() {
             onClick={() => setParamsOpen((s) => !s)}
             aria-expanded={paramsOpen}
             aria-controls="advanced-parameters"
-            className="flex items-center gap-1.5 text-sm font-medium hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-sm font-medium hover:text-foreground transition-colors outline-none"
           >
             <ChevronRight className={cn("h-3.5 w-3.5 transition-transform", paramsOpen && "rotate-90")} />
             Advanced Parameters
