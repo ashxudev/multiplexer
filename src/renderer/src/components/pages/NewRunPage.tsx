@@ -250,8 +250,8 @@ export function NewRunPage() {
         </div>
 
         {campaign.target_type !== 'protein' && (
-          <div className="rounded-md border border-blue-900/50 bg-blue-950/30 p-3">
-            <p className="text-xs text-blue-400">
+          <div className="rounded-md border bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-900/50 p-3">
+            <p className="text-xs text-blue-600 dark:text-blue-400">
               This campaign targets {campaign.target_type.toUpperCase()}. Affinity metrics
               (binding confidence, optimization score) will not be available for these predictions.
             </p>
@@ -382,8 +382,8 @@ export function NewRunPage() {
         </div>
 
         {error && (
-          <div className="rounded-md border border-red-900/50 bg-red-950/30 p-3">
-            <p className="text-xs text-red-400">{error}</p>
+          <div className="rounded-md border bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-900/50 p-3">
+            <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
           </div>
         )}
 
