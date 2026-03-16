@@ -1,4 +1,4 @@
-import { app, BrowserWindow, nativeTheme, shell } from 'electron';
+import { app, BrowserWindow, nativeImage, nativeTheme, shell } from 'electron';
 import { join } from 'path';
 import { createIPCHandler } from 'trpc-electron/main';
 import { appRouter } from './trpc/router';
@@ -23,6 +23,7 @@ function createWindow(): BrowserWindow {
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 16, y: 16 },
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#151110' : '#ffffff',
+    icon: join(__dirname, '../../build/icon.png'),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -47,6 +48,12 @@ function createWindow(): BrowserWindow {
 }
 
 app.whenReady().then(() => {
+  // Set dock icon for macOS (in dev, the .icns isn't bundled yet)
+  if (process.platform === 'darwin') {
+    const iconPath = join(__dirname, '../../build/icon.png');
+    app.dock.setIcon(nativeImage.createFromPath(iconPath));
+  }
+
   services = AppServices.initialize();
   mainWindow = createWindow();
 
