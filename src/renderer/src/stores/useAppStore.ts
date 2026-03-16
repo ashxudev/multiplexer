@@ -24,6 +24,10 @@ interface AppState {
   selectCompound: (id: string | null) => void;
   setSampleIndex: (index: number) => void;
 
+  // Notifications
+  notificationsEnabled: boolean;
+  setNotificationsEnabled: (enabled: boolean) => void;
+
   // Sidebar
   sidebarOpen: boolean;
   sidebarWidth: number;
@@ -39,6 +43,9 @@ export const useAppStore = create<AppState>()(
     (set, get) => ({
       currentView: 'workspace',
       setView: (view) => set({ currentView: view }),
+
+      notificationsEnabled: true,
+      setNotificationsEnabled: (enabled) => set({ notificationsEnabled: enabled }),
 
       selectedCampaignId: null,
       selectedRunId: null,
@@ -123,6 +130,7 @@ export const useAppStore = create<AppState>()(
         sidebarWidth: state.sidebarWidth,
         lastOpenSidebarWidth: state.lastOpenSidebarWidth,
         expandedCampaignIds: state.expandedCampaignIds,
+        notificationsEnabled: state.notificationsEnabled,
       }),
       storage: {
         getItem: (name) => {
