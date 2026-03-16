@@ -1,0 +1,50 @@
+appId: com.multiplexerapp.multiplexer
+productName: Multiplexer
+
+directories:
+  buildResources: build
+  output: dist
+
+files:
+  - out/**/*
+  - build/icon.png
+  - "!out/**/*.map"
+  - "!CLAUDE.md"
+  - "!AGENTS.md"
+  - "!claude.md"
+  - "!agents.md"
+  - "!.claude"
+  - "!.context"
+
+extraMetadata:
+  main: ./out/main/index.js
+
+asar: true
+asarUnpack:
+  - "node_modules/tar/**/*"
+
+mac:
+  category: public.app-category.developer-tools
+  icon: build/icon.icns
+  target:
+    - target: dmg
+      arch:
+        - arm64
+  identity: "Ashley Xu (38QVRKY528)"
+  hardenedRuntime: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  notarize:
+    teamId: "38QVRKY528"
+
+dmg:
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+  window:
+    width: 540
+    height: 380
