@@ -19,7 +19,7 @@ export function TopBar() {
       >
         <button
           onClick={toggleSidebar}
-          className="flex items-center justify-center size-7 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-accent/50"
+          className="flex items-center justify-center size-7 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-accent/50 outline-none"
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
           title="Toggle sidebar (Cmd+B)"
         >

@@ -102,7 +102,7 @@ function CampaignItem({ campaign }: { campaign: Campaign }) {
           toggleCampaignExpanded(campaign.id);
         }}
         className={cn(
-          'group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent/50',
+          'group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent/50 outline-none',
         )}
       >
         <ChevronRight
@@ -134,7 +134,7 @@ function CampaignItem({ campaign }: { campaign: Campaign }) {
                 setView('workspace');
               }}
               className={cn(
-                'flex w-full items-center gap-1 rounded-md px-2 py-1 text-left text-sm transition-colors hover:bg-accent/50',
+                'flex w-full items-center gap-1 rounded-md px-2 py-1 text-left text-sm transition-colors hover:bg-accent/50 outline-none',
                 selectedRunId === run.id && 'bg-accent text-foreground',
               )}
             >
@@ -147,7 +147,7 @@ function CampaignItem({ campaign }: { campaign: Campaign }) {
               selectCampaign(campaign.id);
               setView('new-run');
             }}
-            className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-xs text-subtle transition-colors hover:bg-accent/50 hover:text-dim"
+            className="flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-xs text-subtle transition-colors hover:bg-accent/50 hover:text-dim outline-none"
           >
             <Plus className="h-3 w-3" />
             New Run
@@ -204,7 +204,7 @@ function ArchivedSection({ campaigns }: { campaigns: Campaign[] }) {
                     e.stopPropagation();
                     handleUnarchive(campaign.id);
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100 outline-none"
                   title="Unarchive"
                 >
                   <ArchiveRestore className="h-3.5 w-3.5 text-subtle hover:text-dim" />

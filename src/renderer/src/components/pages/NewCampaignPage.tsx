@@ -122,7 +122,7 @@ export function NewCampaignPage() {
     <div className="h-full overflow-auto p-6">
       <button
         onClick={() => setView('workspace')}
-        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 outline-none"
       >
         <ArrowLeft className="h-4 w-4" />
         Back

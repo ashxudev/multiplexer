@@ -101,7 +101,7 @@ export function CompoundDetail({ compoundId }: { compoundId: string }) {
           </MolStarErrorBoundary>
           <button
             onClick={() => setViewerExpanded(false)}
-            className={`absolute right-6 top-6 z-10 transition-colors ${viewerIconClass}`}
+            className={`absolute right-6 top-6 z-10 transition-colors outline-none ${viewerIconClass}`}
             title="Exit fullscreen"
           >
             <Minimize className="h-4 w-4" />
@@ -157,7 +157,7 @@ export function CompoundDetail({ compoundId }: { compoundId: string }) {
                   </MolStarErrorBoundary>
                   <button
                     onClick={() => setViewerExpanded(true)}
-                    className={`absolute right-2 top-2 transition-colors ${viewerIconClass}`}
+                    className={`absolute right-2 top-2 transition-colors outline-none ${viewerIconClass}`}
                     title="Fullscreen viewer"
                   >
                     <Maximize className="h-4 w-4" />
