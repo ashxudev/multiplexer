@@ -38,11 +38,11 @@ node_modules/
 # Build output
 dist/
 build/
-out/
-
-# Exception: app icons are committed
+!build/
+build/*
 !build/icon.icns
 !build/icon.png
+out/
 
 # TypeScript build cache
 *.tsbuildinfo
