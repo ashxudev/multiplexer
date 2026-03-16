@@ -37,11 +37,6 @@ node_modules/
 
 # Build output
 dist/
-build/
-!build/
-build/*
-!build/icon.icns
-!build/icon.png
 out/
 
 # TypeScript build cache
