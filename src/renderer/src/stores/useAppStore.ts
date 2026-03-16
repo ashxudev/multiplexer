@@ -32,6 +32,10 @@ interface AppState {
   setSidebarWidth: (width: number) => void;
   expandedCampaignIds: Set<string>;
   toggleCampaignExpanded: (id: string) => void;
+
+  // Detail panel
+  detailPanelSize: number;
+  setDetailPanelSize: (size: number) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -107,6 +111,9 @@ export const useAppStore = create<AppState>()(
         }
       },
 
+      detailPanelSize: 25,
+      setDetailPanelSize: (size) => set({ detailPanelSize: size }),
+
       expandedCampaignIds: new Set(),
       toggleCampaignExpanded: (id) =>
         set((s) => {
@@ -123,6 +130,7 @@ export const useAppStore = create<AppState>()(
         sidebarWidth: state.sidebarWidth,
         lastOpenSidebarWidth: state.lastOpenSidebarWidth,
         expandedCampaignIds: state.expandedCampaignIds,
+        detailPanelSize: state.detailPanelSize,
       }),
       storage: {
         getItem: (name) => {

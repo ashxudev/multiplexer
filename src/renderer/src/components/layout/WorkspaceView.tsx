@@ -35,6 +35,8 @@ export function WorkspaceView() {
   const setSidebarWidth = useAppStore((s) => s.setSidebarWidth);
   const selectedRunId = useAppStore((s) => s.selectedRunId);
   const selectedCompoundId = useAppStore((s) => s.selectedCompoundId);
+  const detailPanelSize = useAppStore((s) => s.detailPanelSize);
+  const setDetailPanelSize = useAppStore((s) => s.setDetailPanelSize);
   const campaigns = trpc.campaigns.list.useQuery();
   const sidebarRef = useRef<ImperativePanelHandle>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -111,6 +113,12 @@ export function WorkspaceView() {
       panel.resize(pct);
     }
   }, []);
+
+  // Track detail panel size so it survives unmount/remount across run switches
+  const handleDetailResize = useCallback(
+    (size: number) => setDetailPanelSize(size),
+    [setDetailPanelSize],
+  );
 
   // Report pixel width to store on layout change
   const handleLayout = useCallback(
@@ -199,9 +207,10 @@ export function WorkspaceView() {
             <Panel
               id="detail"
               order={3}
-              defaultSize={25}
+              defaultSize={detailPanelSize}
               minSize={25}
               maxSize={detailMaxPct}
+              onResize={handleDetailResize}
             >
               <CompoundDetail compoundId={selectedCompoundId} />
             </Panel>

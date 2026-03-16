@@ -138,6 +138,36 @@ export function ResultsTable({
     });
   }, [run.data?.compounds, sortColumn, sortDir]);
 
+  // Arrow key navigation between compounds
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return;
+
+      if (!selectedCompoundId || sortedCompounds.length === 0) return;
+
+      const currentIndex = sortedCompounds.findIndex((c) => c.id === selectedCompoundId);
+      if (currentIndex === -1) return;
+
+      const nextIndex = e.key === 'ArrowUp' ? currentIndex - 1 : currentIndex + 1;
+      if (nextIndex < 0 || nextIndex >= sortedCompounds.length) return;
+
+      e.preventDefault();
+      const nextCompound = sortedCompounds[nextIndex];
+      selectCompound(nextCompound.id);
+
+      requestAnimationFrame(() => {
+        const row = document.querySelector(`tr[data-compound-id="${nextCompound.id}"]`);
+        row?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      });
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedCompoundId, sortedCompounds, selectCompound]);
+
   const handleSort = (col: SortColumn) => {
     if (sortColumn === col) {
       setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -320,6 +350,7 @@ export function ResultsTable({
             return (
               <tr
                 key={compound.id}
+                data-compound-id={compound.id}
                 onClick={() => selectCompound(compound.id)}
                 className={cn(
                   "border-b border-border/50 cursor-pointer hover:bg-muted/50 transition-colors",
