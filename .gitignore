@@ -40,6 +40,10 @@ dist/
 build/
 out/
 
+# Exception: app icons are committed
+!build/icon.icns
+!build/icon.png
+
 # TypeScript build cache
 *.tsbuildinfo
 
