@@ -156,7 +156,7 @@ export function ResultsTable({
     if (showAffinity) headers.push('Binding Confidence', 'Optimization Score');
 
     // Build rows using current sort order
-    const fmt = (v: number | null | undefined) => v != null ? Number(v.toFixed(2)) : null;
+    const fmt = (v: number | null | undefined): string | null => v != null ? v.toFixed(2) : null;
     const rows = sortedCompounds.map((compound) => {
       const sample = compound.metrics?.samples[0] ?? null;
       const affinity = compound.metrics?.affinity ?? null;
