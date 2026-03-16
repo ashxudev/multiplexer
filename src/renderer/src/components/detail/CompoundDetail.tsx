@@ -225,8 +225,8 @@ export function CompoundDetail({ compoundId }: { compoundId: string }) {
 
             {/* Error */}
             {c.error_message && (
-              <div className="rounded-md border border-red-900/50 bg-red-950/30 p-3">
-                <p className="text-xs text-red-400">{c.error_message}</p>
+              <div className="rounded-md border bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-900/50 p-3">
+                <p className="text-xs text-red-600 dark:text-red-400">{c.error_message}</p>
               </div>
             )}
           </div>

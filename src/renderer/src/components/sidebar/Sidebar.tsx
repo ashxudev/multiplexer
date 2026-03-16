@@ -65,13 +65,13 @@ function RunProgressSummary({ run }: { run: Run }) {
         </span>
       )}
       {running > 0 && (
-        <span className="flex items-center gap-0.5 text-blue-400">
+        <span className="flex items-center gap-0.5 text-blue-600 dark:text-blue-400">
           <Loader2 className="h-3 w-3 animate-spin" />
           {running}
         </span>
       )}
       {failed > 0 && (
-        <span className="flex items-center gap-0.5 text-red-400">
+        <span className="flex items-center gap-0.5 text-red-600 dark:text-red-400">
           <XCircle className="h-3 w-3" />
           {failed}
         </span>
