@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { trpc } from '@/api/trpc';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAppStore } from '@/stores/useAppStore';
 
 /**
  * Subscribe to backend events via tRPC subscriptions.
@@ -8,6 +9,7 @@ import { useQueryClient } from '@tanstack/react-query';
  */
 export function useBackendEvents() {
   const queryClient = useQueryClient();
+  const notificationsEnabled = useAppStore((s) => s.notificationsEnabled);
 
   // Compound status changes → invalidate campaigns + run queries
   trpc.compounds.onStatusChanged.useSubscription(undefined, {
@@ -37,10 +39,8 @@ export function useBackendEvents() {
       queryClient.invalidateQueries({ queryKey: [['campaigns', 'list']] });
 
       // Desktop notification
-      if (Notification.permission === 'granted') {
-        new Notification('Run Complete', {
-          body: `${event.run_name}: ${event.completed_count} completed, ${event.failed_count} failed`,
-        });
+      if (notificationsEnabled && Notification.permission === 'granted') {
+        new Notification(`${event.run_name} — Completed`);
       }
     },
   });

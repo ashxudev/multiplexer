@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Key, FolderOpen, Paintbrush, Sun, Moon, Monitor, Eye, EyeOff, Loader2, CheckCircle2, XCircle, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Key, FolderOpen, Paintbrush, Sun, Moon, Monitor, Eye, EyeOff, Loader2, CheckCircle2, XCircle, ExternalLink, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,12 +7,14 @@ import { useAppStore } from '@/stores/useAppStore';
 import { useTheme, type Theme } from '@/hooks/useTheme';
 import { useStructureTheme, type StructureTheme } from '@/hooks/useStructureTheme';
 import { trpc } from '@/api/trpc';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 
-type SettingsSection = 'general' | 'workspace' | 'appearance';
+type SettingsSection = 'general' | 'workspace' | 'appearance' | 'notifications';
 
 const SECTIONS: { id: SettingsSection; label: string; icon: typeof Key }[] = [
   { id: 'appearance', label: 'Appearance', icon: Paintbrush },
+  { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'workspace', label: 'Workspace Directory', icon: FolderOpen },
   { id: 'general', label: 'API Key', icon: Key },
 ];
@@ -61,6 +63,7 @@ export function SettingsPage() {
           {activeSection === 'general' && <GeneralSettings />}
           {activeSection === 'workspace' && <WorkspaceSettings />}
           {activeSection === 'appearance' && <AppearanceSettings />}
+          {activeSection === 'notifications' && <NotificationSettings />}
         </div>
       </div>
     </div>
@@ -306,6 +309,35 @@ function AppearanceSettings() {
             </button>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function NotificationSettings() {
+  const notificationsEnabled = useAppStore((s) => s.notificationsEnabled);
+  const setNotificationsEnabled = useAppStore((s) => s.setNotificationsEnabled);
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-semibold">Notifications</h2>
+        <p className="text-sm text-muted-foreground">
+          Configure desktop notification preferences
+        </p>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="space-y-0.5">
+          <Label>Run completion</Label>
+          <p className="text-xs text-muted-foreground">
+            Show a desktop notification when a prediction run finishes
+          </p>
+        </div>
+        <Switch
+          checked={notificationsEnabled}
+          onCheckedChange={setNotificationsEnabled}
+        />
       </div>
     </div>
   );
