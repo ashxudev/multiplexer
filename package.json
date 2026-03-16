@@ -1,6 +1,8 @@
 {
   "name": "multiplexer-electron",
   "version": "0.1.0",
+  "description": "Desktop app for batch molecular docking with Boltz Lab",
+  "author": "Multiplexer contributors",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -9,7 +11,9 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "postinstall": "mkdir -p public && cp node_modules/@rdkit/rdkit/dist/RDKit_minimal.wasm public/RDKit_minimal.wasm"
+    "postinstall": "mkdir -p public && cp node_modules/@rdkit/rdkit/dist/RDKit_minimal.wasm public/RDKit_minimal.wasm",
+    "dist:mac": "set -a && [ -f .env.local ] && . .env.local; set +a && electron-vite build && electron-builder --mac",
+    "dist": "set -a && [ -f .env.local ] && . .env.local; set +a && electron-vite build && electron-builder"
   },
   "dependencies": {
     "@rdkit/rdkit": "2025.3.4-1.0.0",

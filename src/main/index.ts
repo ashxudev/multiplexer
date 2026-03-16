@@ -48,8 +48,8 @@ function createWindow(): BrowserWindow {
 }
 
 app.whenReady().then(() => {
-  // Set dock icon for macOS (in dev, the .icns isn't bundled yet)
-  if (process.platform === 'darwin') {
+  // Set dock icon for macOS dev mode (in production, the bundled .icns handles it)
+  if (process.platform === 'darwin' && !app.isPackaged) {
     const iconPath = join(__dirname, '../../build/icon.png');
     app.dock.setIcon(nativeImage.createFromPath(iconPath));
   }
