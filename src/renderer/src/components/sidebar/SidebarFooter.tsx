@@ -8,7 +8,7 @@ export function SidebarFooter() {
     <div className="flex items-center justify-between border-t border-border px-3 py-2">
       <button
         onClick={() => window.open('mailto:feedback@multiplexer.app', '_blank')}
-        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors outline-none"
       >
         <MessageSquare className="h-4 w-4" />
         Feedback
@@ -16,7 +16,7 @@ export function SidebarFooter() {
 
       <button
         onClick={() => setView('settings')}
-        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors outline-none"
         title="Settings"
       >
         <Settings className="h-4 w-4" />
