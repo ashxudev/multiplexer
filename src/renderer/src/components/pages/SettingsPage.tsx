@@ -166,7 +166,7 @@ function GeneralSettings() {
           {verifyStatus === 'loading' && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
           {verifyStatus === 'success' && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
           {verifyStatus === 'error' && (
-            <button type="button" onClick={handleRetry} className="flex items-center gap-1 text-red-400 hover:text-red-300 transition-colors">
+            <button type="button" onClick={handleRetry} className="flex items-center gap-1 text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300 transition-colors">
               <XCircle className="h-3.5 w-3.5" />
               <span className="text-xs">Retry</span>
             </button>

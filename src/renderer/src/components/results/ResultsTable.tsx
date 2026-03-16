@@ -379,11 +379,11 @@ function SortHeader({
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     COMPLETED: 'text-emerald-500',
-    RUNNING: 'text-blue-400',
-    CREATED: 'text-blue-400',
+    RUNNING: 'text-blue-600 dark:text-blue-400',
+    CREATED: 'text-blue-600 dark:text-blue-400',
     PENDING: 'text-muted-foreground',
-    FAILED: 'text-red-400',
-    TIMED_OUT: 'text-amber-400',
+    FAILED: 'text-red-600 dark:text-red-400',
+    TIMED_OUT: 'text-amber-600 dark:text-amber-400',
     CANCELLED: 'text-muted-foreground',
   };
 

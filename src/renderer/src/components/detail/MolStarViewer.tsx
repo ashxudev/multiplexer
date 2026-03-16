@@ -110,7 +110,7 @@ export function MolStarViewer({ compoundId, sampleIndex, className }: MolStarVie
   if (cifQuery.isError) {
     return (
       <div className="flex items-center justify-center rounded-md border border-dashed border-border bg-surface/50">
-        <span className="text-xs text-red-400">Failed to load structure</span>
+        <span className="text-xs text-red-600 dark:text-red-400">Failed to load structure</span>
       </div>
     );
   }
@@ -118,7 +118,7 @@ export function MolStarViewer({ compoundId, sampleIndex, className }: MolStarVie
   if (error) {
     return (
       <div className="flex items-center justify-center rounded-md border border-dashed border-border bg-surface/50">
-        <span className="text-xs text-red-400">{error}</span>
+        <span className="text-xs text-red-600 dark:text-red-400">{error}</span>
       </div>
     );
   }
