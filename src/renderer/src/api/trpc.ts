@@ -82,8 +82,8 @@ const MOCK_CAMPAIGNS = [
 ];
 
 const MOCK_SETTINGS = {
-  api_key: 'boltzpk_live_mock123',
-  root_dir: '/Users/demo/multiplexer',
+  api_key: 'test_mock_api_key',
+  root_dir: '/tmp/mock-workspace',
 };
 
 function getMockResponse(path: string, input: unknown): unknown {
@@ -95,7 +95,7 @@ function getMockResponse(path: string, input: unknown): unknown {
     case 'settings.testConnection':
       return true;
     case 'settings.selectRootDir':
-      return '/Users/demo/new-workspace';
+      return '/tmp/mock-new-workspace';
     case 'settings.save':
     case 'campaigns.create':
       return { ...MOCK_CAMPAIGNS[0], id: 'mock-new-' + Date.now() };
@@ -139,7 +139,7 @@ function getMockResponse(path: string, input: unknown): unknown {
     case 'compounds.getPaeImageData':
       return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
     default:
-      console.warn(`[trpc mock] Unhandled path: ${path}`);
+      // Unhandled mock path — silently return null
       return null;
   }
 }
@@ -174,7 +174,6 @@ export function createTrpcClient() {
     });
   }
 
-  console.warn('[trpc] Running in browser QA mode with mock data');
   return trpc.createClient({
     links: [mockLink()],
   });
