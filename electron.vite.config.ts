@@ -19,12 +19,15 @@ export default defineConfig({
               org: process.env.SENTRY_ORG,
               project: process.env.SENTRY_PROJECT,
               authToken: process.env.SENTRY_AUTH_TOKEN,
+              sourcemaps: {
+                filesToDeleteAfterUpload: ['./out/main/**/*.map'],
+              },
             }),
           ]
         : []),
     ],
     build: {
-      sourcemap: sentryEnabled,
+      sourcemap: sentryEnabled ? 'hidden' : false,
       rollupOptions: {
         external: ['tar'],
       },

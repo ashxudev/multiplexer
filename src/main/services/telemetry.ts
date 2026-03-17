@@ -4,6 +4,7 @@ import { app } from 'electron';
 import { readAnalyticsEnabled } from './prefs';
 
 let enabled = false;
+let aptabaseInitialized = false;
 
 export function initTelemetry(): void {
   enabled = readAnalyticsEnabled();
@@ -22,10 +23,16 @@ export function initTelemetry(): void {
   });
 
   if (enabled) {
-    const aptabaseKey = import.meta.env.MAIN_VITE_APTABASE_APP_KEY || '';
-    if (aptabaseKey) {
-      initialize(aptabaseKey);
-    }
+    ensureAptabase();
+  }
+}
+
+function ensureAptabase(): void {
+  if (aptabaseInitialized) return;
+  const key = import.meta.env.MAIN_VITE_APTABASE_APP_KEY || '';
+  if (key) {
+    initialize(key);
+    aptabaseInitialized = true;
   }
 }
 
@@ -39,6 +46,9 @@ export function trackEvent(
 
 export function setTelemetryEnabled(value: boolean): void {
   enabled = value;
+  if (value) {
+    ensureAptabase();
+  }
 }
 
 function scrubEvent(event: Sentry.Event): Sentry.Event | null {
@@ -58,8 +68,11 @@ function scrubEvent(event: Sentry.Event): Sentry.Event | null {
     delete event.request.data;
   }
 
-  // Scrub macOS usernames from file paths
+  // Scrub usernames from file paths (macOS, Linux, Windows)
   const json = JSON.stringify(event);
-  const scrubbed = json.replace(/\/Users\/[^/]+\//g, '~/');
+  const scrubbed = json
+    .replace(/\/Users\/[^/]+\//g, '~/')
+    .replace(/\/home\/[^/]+\//g, '~/')
+    .replace(/C:\\\\Users\\\\[^\\]+\\\\/gi, '~\\\\');
   return JSON.parse(scrubbed);
 }

@@ -126,7 +126,7 @@ export const runsRouter = router({
       createRunFolder(state.rootDir, campaign.folder_name, runFolder);
       persistState(state.rootDir, state.data);
 
-      trackEvent('run_submitted', { num_compounds: compounds.length });
+      try { trackEvent('run_submitted', { num_compounds: compounds.length }); } catch { /* telemetry must not abort mutations */ }
 
       // Return run snapshot immediately, then submit compounds in background
       const runSnapshot = structuredClone(run);

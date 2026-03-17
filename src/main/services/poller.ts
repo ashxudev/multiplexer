@@ -262,10 +262,9 @@ export class Poller {
     };
     this.services.eventBus.emit('compound-status-changed', statusEvent);
 
-    trackEvent('run_failed', { error_type: status });
-
     if (runEvent) {
       this.services.eventBus.emit('run-completed', runEvent);
+      trackEvent('run_failed', { error_type: status });
     }
   }
 }
