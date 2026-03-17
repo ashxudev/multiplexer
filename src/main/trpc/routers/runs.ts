@@ -16,6 +16,7 @@ import {
   buildInferenceOptions,
   buildPredictionName,
 } from '../../services/boltz-client';
+import { trackEvent } from '../../services/telemetry';
 import { humanizeError } from '../../services/humanize-error';
 import type {
   Compound,
@@ -124,6 +125,8 @@ export const runsRouter = router({
       state.markDirty();
       createRunFolder(state.rootDir, campaign.folder_name, runFolder);
       persistState(state.rootDir, state.data);
+
+      try { trackEvent('run_submitted', { num_compounds: compounds.length }); } catch { /* telemetry must not abort mutations */ }
 
       // Return run snapshot immediately, then submit compounds in background
       const runSnapshot = structuredClone(run);

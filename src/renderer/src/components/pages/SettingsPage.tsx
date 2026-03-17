@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Key, FolderOpen, Paintbrush, Sun, Moon, Monitor, Eye, EyeOff, Loader2, CheckCircle2, XCircle, ExternalLink, Bell } from 'lucide-react';
+import { ArrowLeft, Key, FolderOpen, Paintbrush, Sun, Moon, Monitor, Eye, EyeOff, Loader2, CheckCircle2, XCircle, ExternalLink, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,18 +10,18 @@ import { trpc } from '@/api/trpc';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 
-type SettingsSection = 'general' | 'workspace' | 'appearance' | 'notifications';
+type SettingsSection = 'general' | 'api' | 'workspace' | 'appearance';
 
 const SECTIONS: { id: SettingsSection; label: string; icon: typeof Key }[] = [
+  { id: 'general', label: 'General', icon: Settings },
   { id: 'appearance', label: 'Appearance', icon: Paintbrush },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'workspace', label: 'Workspace Directory', icon: FolderOpen },
-  { id: 'general', label: 'API Key', icon: Key },
+  { id: 'api', label: 'API Key', icon: Key },
 ];
 
 export function SettingsPage() {
   const setView = useAppStore((s) => s.setView);
-  const [activeSection, setActiveSection] = useState<SettingsSection>('appearance');
+  const [activeSection, setActiveSection] = useState<SettingsSection>('general');
 
   return (
     <div className="flex h-full bg-sidebar">
@@ -61,9 +61,9 @@ export function SettingsPage() {
       <div className="flex-1 m-3 bg-background rounded-lg overflow-auto">
         <div className="p-8 max-w-2xl">
           {activeSection === 'general' && <GeneralSettings />}
+          {activeSection === 'api' && <ApiKeySettings />}
           {activeSection === 'workspace' && <WorkspaceSettings />}
           {activeSection === 'appearance' && <AppearanceSettings />}
-          {activeSection === 'notifications' && <NotificationSettings />}
         </div>
       </div>
     </div>
@@ -71,6 +71,71 @@ export function SettingsPage() {
 }
 
 function GeneralSettings() {
+  const notificationsEnabled = useAppStore((s) => s.notificationsEnabled);
+  const setNotificationsEnabled = useAppStore((s) => s.setNotificationsEnabled);
+  const telemetry = trpc.settings.getTelemetry.useQuery();
+  const setTelemetry = trpc.settings.setTelemetry.useMutation({
+    onSuccess: () => telemetry.refetch(),
+  });
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-lg font-semibold">General</h2>
+        <p className="text-sm text-muted-foreground">
+          Notifications and telemetry preferences
+        </p>
+      </div>
+
+      {/* Notifications */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-0.5">
+          <Label>Notifications</Label>
+          <p className="text-xs text-muted-foreground">
+            Show a desktop notification when a prediction run finishes
+          </p>
+        </div>
+        <Switch
+          checked={notificationsEnabled}
+          onCheckedChange={setNotificationsEnabled}
+        />
+      </div>
+
+      {/* Telemetry */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label>Telemetry</Label>
+            <p className="text-xs text-muted-foreground">
+              Send anonymous crash reports and aggregate feature counts
+            </p>
+          </div>
+          <Switch
+            checked={telemetry.data?.enabled ?? false}
+            disabled={telemetry.isLoading}
+            onCheckedChange={(v) => setTelemetry.mutate({ enabled: v })}
+          />
+        </div>
+
+        <div className="rounded-md border border-border px-4 py-3">
+          <p className="text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">Your biomolecular data is never included in telemetry.</span>{' '}
+            No SMILES, sequences, compound names or file contents are ever
+            collected. Telemetry is limited to crash diagnostics and aggregate
+            counts — how many users launched the app
+            or submitted a run, not what was in it. Processed by{' '}
+            <a href="https://sentry.io" target="_blank" rel="noopener noreferrer" className="hover:underline">Sentry</a>
+            {' '}(crashes) and{' '}
+            <a href="https://aptabase.com" target="_blank" rel="noopener noreferrer" className="hover:underline">Aptabase</a>
+            {' '}(counts).
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ApiKeySettings() {
   const settings = trpc.settings.get.useQuery();
   const saveMutation = trpc.settings.save.useMutation();
   const testMutation = trpc.settings.testConnection.useMutation();
@@ -309,35 +374,6 @@ function AppearanceSettings() {
             </button>
           ))}
         </div>
-      </div>
-    </div>
-  );
-}
-
-function NotificationSettings() {
-  const notificationsEnabled = useAppStore((s) => s.notificationsEnabled);
-  const setNotificationsEnabled = useAppStore((s) => s.setNotificationsEnabled);
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold">Notifications</h2>
-        <p className="text-sm text-muted-foreground">
-          Configure desktop notification preferences
-        </p>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div className="space-y-0.5">
-          <Label>Run completion</Label>
-          <p className="text-xs text-muted-foreground">
-            Show a desktop notification when a prediction run finishes
-          </p>
-        </div>
-        <Switch
-          checked={notificationsEnabled}
-          onCheckedChange={setNotificationsEnabled}
-        />
       </div>
     </div>
   );

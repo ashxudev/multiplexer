@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { dialog } from 'electron';
 import { router, publicProcedure } from '../trpc';
-import { writeRootDir } from '../../services/prefs';
+import { writeRootDir, readAnalyticsEnabled, writeAnalyticsEnabled } from '../../services/prefs';
+import { setTelemetryEnabled } from '../../services/telemetry';
 import { loadState, persistState } from '../../services/storage';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -79,4 +80,15 @@ export const settingsRouter = router({
     }
     return result.filePaths[0];
   }),
+
+  getTelemetry: publicProcedure.query(() => {
+    return { enabled: readAnalyticsEnabled() };
+  }),
+
+  setTelemetry: publicProcedure
+    .input(z.object({ enabled: z.boolean() }))
+    .mutation(({ input }) => {
+      writeAnalyticsEnabled(input.enabled);
+      setTelemetryEnabled(input.enabled);
+    }),
 });

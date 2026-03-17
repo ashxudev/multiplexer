@@ -4,6 +4,10 @@ import { createIPCHandler } from 'trpc-electron/main';
 import { appRouter } from './trpc/router';
 import { createContext } from './trpc/context';
 import { AppServices } from './services';
+import { initTelemetry, trackEvent } from './services/telemetry';
+
+// Sentry + Aptabase: must install crash handlers before anything else
+initTelemetry();
 
 // Dev/Playwright: nohup & can lose macOS WindowServer dark mode detection.
 // The dev.sh script detects dark mode and sets MULTIPLEXER_FORCE_DARK=1.
@@ -56,6 +60,11 @@ app.whenReady().then(() => {
 
   services = AppServices.initialize();
   mainWindow = createWindow();
+
+  trackEvent('app_launched', {
+    version: app.getVersion(),
+    os: process.platform,
+  });
 
   const ipcHandler = createIPCHandler({
     router: appRouter,

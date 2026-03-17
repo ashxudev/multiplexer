@@ -8,6 +8,7 @@ import {
   renameFolder,
   persistState,
 } from '../../services/storage';
+import { trackEvent } from '../../services/telemetry';
 import path from 'node:path';
 
 export const campaignsRouter = router({
@@ -69,6 +70,8 @@ export const campaignsRouter = router({
 
       createCampaignFolder(state.rootDir, folderName);
       persistState(state.rootDir, state.data);
+
+      trackEvent('campaign_created');
 
       return campaign;
     }),
