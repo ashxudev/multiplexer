@@ -63,6 +63,7 @@ app.whenReady().then(() => {
   app.setAboutPanelOptions({
     applicationName: 'Multiplexer',
     applicationVersion: app.getVersion(),
+    version: '',
     website: 'https://github.com/ashxudev/multiplexer',
     iconPath: join(__dirname, '../../build/icon.png'),
   });
