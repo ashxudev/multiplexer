@@ -5,6 +5,7 @@ import { appRouter } from './trpc/router';
 import { createContext } from './trpc/context';
 import { AppServices } from './services';
 import { initTelemetry, trackEvent } from './services/telemetry';
+import { createApplicationMenu } from './menu';
 
 // Sentry + Aptabase: must install crash handlers before anything else
 initTelemetry();
@@ -57,6 +58,15 @@ app.whenReady().then(() => {
     const iconPath = join(__dirname, '../../build/icon.png');
     app.dock.setIcon(nativeImage.createFromPath(iconPath));
   }
+
+  app.name = 'Multiplexer';
+  app.setAboutPanelOptions({
+    applicationName: 'Multiplexer',
+    applicationVersion: app.getVersion(),
+    website: 'https://github.com/ashxudev/multiplexer',
+    iconPath: join(__dirname, '../../build/icon.png'),
+  });
+  createApplicationMenu();
 
   services = AppServices.initialize();
   mainWindow = createWindow();
