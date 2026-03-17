@@ -69,8 +69,10 @@ test.describe('Run Creation @fast @api', () => {
     const validText = TEST_COMPOUNDS.map((c) => `${c.name},${c.smiles}`).join('\n');
     await smilesInput.fill(validText);
 
-    // Wait for validation to clear
-    await appPage.waitForTimeout(2000);
+    // Wait for validation to clear — invalid SMILES button should disappear
+    await expect(
+      appPage.getByRole('button', { name: /Invalid SMILES/i }),
+    ).not.toBeVisible({ timeout: 15_000 });
   });
 
   test('T-072: @api run submission succeeds', async ({ appPage }) => {

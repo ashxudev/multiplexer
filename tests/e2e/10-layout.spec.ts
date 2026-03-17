@@ -13,15 +13,11 @@ test.describe('Layout @fast', () => {
   test('T-141: Cmd+B hides sidebar, Cmd+B shows it again', async ({ appPage }) => {
     // Hide
     await appPage.keyboard.press('Meta+b');
-    await appPage.waitForTimeout(500);
-
-    // The New Campaign button should be hidden
     const sidebar = appPage.getByRole('button', { name: /New Campaign/i });
     await expect(sidebar).not.toBeVisible();
 
     // Show
     await appPage.keyboard.press('Meta+b');
-    await appPage.waitForTimeout(500);
     await expect(sidebar).toBeVisible();
   });
 

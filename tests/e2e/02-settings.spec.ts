@@ -73,6 +73,8 @@ test.describe('Settings @fast @api', () => {
 
   test('T-023: Escape returns to workspace', async ({ appPage }) => {
     await appPage.keyboard.press('Escape');
-    await appPage.waitForTimeout(500);
+    await expect(appPage.getByRole('button', { name: /New Campaign/i })).toBeVisible({
+      timeout: 5_000,
+    });
   });
 });

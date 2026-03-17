@@ -46,9 +46,7 @@ test.describe('Workspace Directory @fast', () => {
 
     // Verify there is a save or submit button for the API key
     const saveBtn = appPage.getByRole('button', { name: /save|set|update/i }).first();
-    if (await saveBtn.isVisible()) {
-      await expect(saveBtn).toBeVisible();
-    }
+    await expect(saveBtn).toBeVisible();
   });
 
   test('T-023b: return to workspace from settings', async ({ appPage }) => {

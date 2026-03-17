@@ -46,13 +46,6 @@ rm -rf "/tmp/multiplexer-prod-test-$CDP_PORT"
 # ── Launch production binary ─────────────────────────────────────────
 bash "$SCRIPT_DIR/prod-test.sh"
 
-# ── Derive CDP port (same algorithm) ────────────────────────────────
-CDP_PORT=$(python3 -c "
-import hashlib, sys
-h = int(hashlib.md5(sys.argv[1].encode()).hexdigest()[:4], 16)
-print(10000 + (h % 50000))
-" "$PROJECT_ROOT")
-
 # ── Wait for CDP to be ready ────────────────────────────────────────
 echo "Waiting for CDP on port $CDP_PORT..."
 for i in $(seq 1 30); do

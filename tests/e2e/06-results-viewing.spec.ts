@@ -56,7 +56,7 @@ test.describe('Results Viewing @api', () => {
   });
 
   test('T-092: @api wait for at least one compound to complete', async ({ appPage }) => {
-    test.setTimeout(300_000); // 5 minutes
+    test.setTimeout(360_000); // 6 minutes — headroom for assertion + screenshot
 
     // Poll until we see COMPLETED status
     await expect(appPage.getByText(/COMPLETED/i).first()).toBeVisible({ timeout: 300_000 });

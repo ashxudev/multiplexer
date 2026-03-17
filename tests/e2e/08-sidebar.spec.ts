@@ -22,11 +22,10 @@ test.describe('Sidebar @fast', () => {
 
     // Click to collapse — run should disappear
     await campaignBtn.click();
-    await appPage.waitForTimeout(300);
+    await expect(runText).not.toBeVisible();
 
     // Click to expand again — run should reappear
     await campaignBtn.click();
-    await appPage.waitForTimeout(300);
     await expect(runText).toBeVisible({ timeout: 5_000 });
   });
 

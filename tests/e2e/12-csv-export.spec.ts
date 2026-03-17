@@ -18,11 +18,8 @@ test.describe('CSV Export @api', () => {
     const resultsTable = appPage.locator('table, [role="grid"], [role="table"]').first();
     if (await resultsTable.isVisible({ timeout: 3_000 }).catch(() => false)) {
       // The export button should be in the results header (Download icon)
-      const exportBtn = appPage
-        .locator('button')
-        .filter({ has: appPage.locator('svg') });
-      // There should be at least one button with an icon in the header
-      await expect(exportBtn.first()).toBeVisible();
+      const exportBtn = appPage.getByRole('button', { name: /export|download|csv/i }).first();
+      await expect(exportBtn).toBeVisible();
     } else {
       // No results table visible — skip gracefully
       console.log('No results table visible; skipping export button check');
@@ -30,7 +27,7 @@ test.describe('CSV Export @api', () => {
     }
   });
 
-  test('T-162: MANUAL — export CSV and inspect content', async ({ appPage }) => {
+  test.fixme('T-162: MANUAL — export CSV and inspect content', async ({ appPage }) => {
     await screenshot(appPage, 'csv-export-before');
 
     console.log('USER ACTION REQUIRED:');

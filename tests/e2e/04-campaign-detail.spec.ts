@@ -32,12 +32,11 @@ test.describe('Campaign Detail @fast', () => {
 
   test('T-055: description field editable', async ({ appPage }) => {
     const descField = appPage.locator('textarea').first();
-    if (await descField.isVisible()) {
-      await descField.fill('Test description for e2e');
-      await descField.blur();
-      // Verify it saved (still shows the text after blur)
-      await expect(descField).toHaveValue('Test description for e2e');
-    }
+    await expect(descField).toBeVisible();
+    await descField.fill('Test description for e2e');
+    await descField.blur();
+    // Verify it saved (still shows the text after blur)
+    await expect(descField).toHaveValue('Test description for e2e');
   });
 
   test('T-057: back button returns to workspace', async ({ appPage }) => {

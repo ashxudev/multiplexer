@@ -12,11 +12,10 @@ test.describe('Keyboard Shortcuts @fast', () => {
 
     // Toggle sidebar off
     await appPage.keyboard.press('Meta+b');
-    await appPage.waitForTimeout(500);
+    await expect(sidebar).not.toBeVisible();
 
     // Toggle sidebar back on
     await appPage.keyboard.press('Meta+b');
-    await appPage.waitForTimeout(500);
     await expect(sidebar).toBeVisible();
   });
 
@@ -35,9 +34,10 @@ test.describe('Keyboard Shortcuts @fast', () => {
   test('T-132: Cmd+Shift+N opens New Run when campaign selected', async ({ appPage }) => {
     await appPage.keyboard.press('Meta+Shift+n');
     // Should navigate to new run form — look for submit button or sequence display
-    await appPage.waitForTimeout(1000);
+    await expect(
+      appPage.getByRole('button', { name: /Submit/i }),
+    ).toBeVisible({ timeout: 5_000 });
     // Go back
     await appPage.keyboard.press('Escape');
-    await appPage.waitForTimeout(500);
   });
 });

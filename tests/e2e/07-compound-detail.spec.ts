@@ -44,12 +44,9 @@ test.describe('Compound Detail @api', () => {
   });
 
   test('T-107: 2D RDKit molecule image rendered', async ({ appPage }) => {
-    // RDKit renders an SVG or img element for the 2D structure
-    const moleculeImage = appPage.locator('svg, img').filter({ hasText: '' }).last();
-    // At least one visual element for the molecule should exist
-    await expect(appPage.locator('[class*="molecule"], svg').first()).toBeVisible({
-      timeout: 10_000,
-    });
+    // RDKit renders an SVG element for the 2D structure inside a molecule container
+    const moleculeVisual = appPage.locator('[class*="molecule"] svg, [class*="molecule"] img').first();
+    await expect(moleculeVisual).toBeVisible({ timeout: 10_000 });
   });
 
   test('T-104: fullscreen toggle on 3D viewer', async ({ appPage }) => {
