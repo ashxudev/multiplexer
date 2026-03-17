@@ -12,6 +12,7 @@ import type { AppServices } from './index';
 import type { BoltzClient } from './boltz-client';
 import { parseMetrics } from './boltz-client';
 import { downloadAndStore } from './file-manager';
+import { trackEvent } from './telemetry';
 
 export class Poller {
   private services: AppServices;
@@ -208,6 +209,7 @@ export class Poller {
 
     if (runEvent) {
       this.services.eventBus.emit('run-completed', runEvent);
+      trackEvent('run_completed', { num_results: runEvent.total });
     }
 
     // Spawn download task
@@ -259,6 +261,8 @@ export class Poller {
       completed_at: nowIso,
     };
     this.services.eventBus.emit('compound-status-changed', statusEvent);
+
+    trackEvent('run_failed', { error_type: status });
 
     if (runEvent) {
       this.services.eventBus.emit('run-completed', runEvent);
