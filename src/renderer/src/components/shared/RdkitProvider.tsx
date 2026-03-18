@@ -23,7 +23,7 @@ export function RdkitProvider({ children }: { children: ReactNode }) {
       .then((mod) => {
         const init = typeof mod === "function" ? mod : (mod as Record<string, unknown>).default ?? mod;
         return (init as (...args: unknown[]) => Promise<RDKitModule>)({
-          locateFile: (file: string) => `/${file}`,
+          locateFile: (file: string) => `./${file}`,
         });
       })
       .then((instance) => {

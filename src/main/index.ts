@@ -16,6 +16,21 @@ if (process.env.MULTIPLEXER_FORCE_DARK) {
   nativeTheme.themeSource = 'dark';
 }
 
+// E2E testing hooks — only active when MULTIPLEXER_E2E=1 is explicitly set.
+// This prevents accidental or malicious activation in normal production use.
+if (process.env.MULTIPLEXER_E2E === '1') {
+  // Enable CDP remote debugging (set by scripts/prod-test.sh).
+  // Electron 30+ rejects --remote-debugging-port as a CLI arg, so we use appendSwitch.
+  if (process.env.REMOTE_DEBUGGING_PORT) {
+    app.commandLine.appendSwitch('remote-debugging-port', process.env.REMOTE_DEBUGGING_PORT);
+  }
+
+  // Isolate user data directory for testing (set by scripts/prod-test.sh).
+  if (process.env.MULTIPLEXER_USER_DATA_DIR) {
+    app.setPath('userData', process.env.MULTIPLEXER_USER_DATA_DIR);
+  }
+}
+
 let mainWindow: BrowserWindow | null = null;
 let services: AppServices | null = null;
 
