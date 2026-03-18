@@ -51,8 +51,16 @@ yarn-error.log*
 # Playwright screenshots
 playwright/
 
-# Playwright dev server (written by scripts/dev.sh)
+# Playwright dev server (written by scripts/dev.sh, prod-test.sh)
 .cdp-pid
+.cdp-prod-pid
+
+# Playwright test artifacts
+test-results/
+playwright-report/
+
+# Test plan documents
+testing.md
 
 # Misc
 *.bak

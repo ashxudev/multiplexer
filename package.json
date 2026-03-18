@@ -13,7 +13,10 @@
     "preview": "electron-vite preview",
     "postinstall": "mkdir -p public && cp node_modules/@rdkit/rdkit/dist/RDKit_minimal.wasm public/RDKit_minimal.wasm",
     "dist:mac": "set -a && [ -f .env.local ] && . .env.local; set +a && electron-vite build && electron-builder --mac",
-    "dist": "set -a && [ -f .env.local ] && . .env.local; set +a && electron-vite build && electron-builder"
+    "dist": "set -a && [ -f .env.local ] && . .env.local; set +a && electron-vite build && electron-builder",
+    "test:e2e": "bash scripts/run-e2e.sh",
+    "test:e2e:fast": "bash scripts/run-e2e.sh --grep @fast",
+    "test:e2e:api": "bash scripts/run-e2e.sh --grep @api"
   },
   "dependencies": {
     "@aptabase/electron": "^0.3.1",
@@ -44,6 +47,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@sentry/vite-plugin": "^5.1.1",
     "@tailwindcss/vite": "^4.2.1",
     "@types/js-yaml": "^4.0.9",
