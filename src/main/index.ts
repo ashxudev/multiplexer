@@ -6,6 +6,7 @@ import { createContext } from './trpc/context';
 import { AppServices } from './services';
 import { initTelemetry, trackEvent } from './services/telemetry';
 import { createApplicationMenu } from './menu';
+import { setupAutoUpdater } from './lib/auto-updater';
 
 // Sentry + Aptabase: must install crash handlers before anything else
 initTelemetry();
@@ -33,6 +34,7 @@ if (process.env.MULTIPLEXER_E2E === '1') {
 
 let mainWindow: BrowserWindow | null = null;
 let services: AppServices | null = null;
+let cleanupAutoUpdater: (() => void) | null = null;
 
 function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
@@ -85,6 +87,7 @@ app.whenReady().then(() => {
   createApplicationMenu();
 
   services = AppServices.initialize();
+  cleanupAutoUpdater = setupAutoUpdater();
   mainWindow = createWindow();
 
   trackEvent('app_launched', {
@@ -114,5 +117,6 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
+  cleanupAutoUpdater?.();
   services?.shutdown();
 });
