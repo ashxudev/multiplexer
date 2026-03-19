@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* ── Dark theme (default) — matches Superset "Ember Dark" ── */
+/* ── Dark theme (default) ── */
 :root {
   --background: #151110;
   --foreground: #eae8e6;

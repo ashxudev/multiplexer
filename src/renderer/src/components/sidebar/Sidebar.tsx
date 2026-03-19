@@ -255,7 +255,6 @@ export function Sidebar() {
         )}
       </ScrollArea>
 
-      {/* Footer — Superset-inspired */}
       <SidebarFooter />
     </aside>
   );
