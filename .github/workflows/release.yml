@@ -66,6 +66,12 @@ jobs:
           security list-keychains -d user -s $KEYCHAIN_PATH login.keychain-db
 
       - name: Build app
+        env:
+          MAIN_VITE_SENTRY_DSN: ${{ secrets.MAIN_VITE_SENTRY_DSN }}
+          MAIN_VITE_APTABASE_APP_KEY: ${{ secrets.MAIN_VITE_APTABASE_APP_KEY }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         run: pnpm run build
 
       - name: Package and sign
