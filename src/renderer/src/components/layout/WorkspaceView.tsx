@@ -13,7 +13,7 @@ import { OnboardingCard } from '@/components/shared/OnboardingCard';
 import { PixelText } from '@/components/shared/PixelText';
 import { trpc } from '@/api/trpc';
 
-/* Matches Superset's ResizableHandle from packages/ui/src/components/ui/resizable.tsx.
+/* Resize handle styling.
    Cursor is forced to col-resize via CSS !important in index.css. */
 const HANDLE_CLASS =
   'bg-border relative flex w-px items-center justify-center ' +

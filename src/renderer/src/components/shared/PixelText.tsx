@@ -1,7 +1,6 @@
 const CELL = 9;
 
 const FONT: Record<string, number[][]> = {
-  // Matching Superset's pixel-art letter style
   S: [[1,1,1],[1,0,0],[1,1,1],[0,0,1],[1,1,1]],
   U: [[1,0,1],[1,0,1],[1,0,1],[1,0,1],[1,1,1]],
   P: [[1,1,1],[1,0,1],[1,1,1],[1,0,0],[1,0,0]],
