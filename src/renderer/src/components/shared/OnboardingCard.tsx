@@ -14,7 +14,7 @@ export function OnboardingCard() {
       </div>
 
       <Button
-        onClick={() => setView("settings")}
+        onClick={() => setView("settings", { settingsSection: "api" })}
         className="w-full max-w-xs"
       >
         <Key className="mr-2 h-4 w-4" />

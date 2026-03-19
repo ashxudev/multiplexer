@@ -11,7 +11,8 @@ export const SIDEBAR_MAX = 400;
 interface AppState {
   // Navigation
   currentView: AppView;
-  setView: (view: AppView) => void;
+  settingsSection: string | null;
+  setView: (view: AppView, opts?: { settingsSection?: string }) => void;
 
   // Selections
   selectedCampaignId: string | null;
@@ -46,7 +47,8 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       currentView: 'workspace',
-      setView: (view) => set({ currentView: view }),
+      settingsSection: null,
+      setView: (view, opts) => set({ currentView: view, settingsSection: opts?.settingsSection ?? null }),
 
       notificationsEnabled: true,
       setNotificationsEnabled: (enabled) => set({ notificationsEnabled: enabled }),

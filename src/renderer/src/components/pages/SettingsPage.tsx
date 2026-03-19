@@ -21,7 +21,10 @@ const SECTIONS: { id: SettingsSection; label: string; icon: typeof Key }[] = [
 
 export function SettingsPage() {
   const setView = useAppStore((s) => s.setView);
-  const [activeSection, setActiveSection] = useState<SettingsSection>('general');
+  const settingsSection = useAppStore((s) => s.settingsSection);
+  const [activeSection, setActiveSection] = useState<SettingsSection>(
+    (settingsSection as SettingsSection) || 'general'
+  );
 
   return (
     <div className="flex h-full bg-sidebar">
