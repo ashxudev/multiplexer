@@ -1,6 +1,11 @@
 appId: com.multiplexerapp.multiplexer
 productName: Multiplexer
 
+publish:
+  provider: github
+  owner: ashxudev
+  repo: multiplexer
+
 directories:
   buildResources: build
   output: dist
@@ -26,8 +31,12 @@ asarUnpack:
 mac:
   category: public.app-category.developer-tools
   icon: build/icon.icns
+  artifactName: "${productName}-${version}-${arch}.${ext}"
   target:
     - target: dmg
+      arch:
+        - arm64
+    - target: zip
       arch:
         - arm64
   identity: "Ashley Xu (38QVRKY528)"

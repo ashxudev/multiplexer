@@ -5,6 +5,7 @@ import { runsRouter } from './routers/runs';
 import { compoundsRouter } from './routers/compounds';
 import { actionsRouter } from './routers/actions';
 import { windowRouter } from './routers/window';
+import { autoUpdateRouter } from './routers/auto-update';
 
 export const appRouter = router({
   settings: settingsRouter,
@@ -13,6 +14,7 @@ export const appRouter = router({
   compounds: compoundsRouter,
   actions: actionsRouter,
   window: windowRouter,
+  autoUpdate: autoUpdateRouter,
 });
 
 export type AppRouter = typeof appRouter;

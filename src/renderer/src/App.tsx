@@ -11,6 +11,8 @@ import { NewRunPage } from '@/components/pages/NewRunPage';
 import { CampaignDetailPage } from '@/components/pages/CampaignDetailPage';
 import { useAppStore } from '@/stores/useAppStore';
 import { useBackendEvents } from '@/hooks/useBackendEvents';
+import { useUpdateListener } from '@/hooks/useUpdateListener';
+import { UpdateToast } from '@/components/UpdateToast';
 
 function App() {
   const currentView = useAppStore((s) => s.currentView);
@@ -21,6 +23,7 @@ function App() {
 
   // Subscribe to backend events
   useBackendEvents();
+  const { updateEvent, dismiss: dismissUpdate } = useUpdateListener();
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -71,6 +74,9 @@ function App() {
         {currentView === 'new-run' && <NewRunPage />}
         {currentView === 'campaign-detail' && <CampaignDetailPage />}
       </div>
+      {updateEvent && (
+        <UpdateToast onDismiss={dismissUpdate} />
+      )}
     </div>
   );
 }
