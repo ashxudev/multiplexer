@@ -179,11 +179,9 @@ export function ResultsTable({
     const runName = run.data.display_name;
 
     // Column headers
-    const headers = [
-      'Name', 'SMILES', 'Status',
-      'Structure Confidence', 'Complex pLDDT', 'ipTM', 'pTM',
-    ];
+    const headers = ['Name', 'SMILES', 'Status'];
     if (showAffinity) headers.push('Binding Confidence', 'Optimization Score');
+    headers.push('Structure Confidence', 'Complex pLDDT', 'ipTM', 'pTM');
 
     // Build rows using current sort order
     const fmt = (v: number | null | undefined): string | null => v != null ? v.toFixed(2) : null;
@@ -195,14 +193,16 @@ export function ResultsTable({
         compound.display_name,
         compound.smiles,
         compound.status,
-        fmt(sample?.structure_confidence),
-        fmt(sample?.complex_plddt),
-        fmt(sample?.iptm),
-        fmt(sample?.ptm),
       ];
       if (showAffinity) {
         row.push(fmt(affinity?.binding_confidence), fmt(affinity?.optimization_score));
       }
+      row.push(
+        fmt(sample?.structure_confidence),
+        fmt(sample?.complex_plddt),
+        fmt(sample?.iptm),
+        fmt(sample?.ptm),
+      );
       return row;
     });
 
