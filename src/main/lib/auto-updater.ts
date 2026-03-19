@@ -78,15 +78,21 @@ export function checkForUpdates(): void {
 
   isDismissed = false;
   emitStatus(AUTO_UPDATE_STATUS.CHECKING);
-  autoUpdater.checkForUpdates().catch((error) => {
-    if (isNetworkError(error)) {
-      console.info('[auto-updater] Network unavailable, will retry later');
-      emitStatus(AUTO_UPDATE_STATUS.IDLE);
-      return;
-    }
-    console.error('[auto-updater] Failed to check for updates:', error);
-    emitStatus(AUTO_UPDATE_STATUS.ERROR, undefined, error.message);
-  });
+  autoUpdater
+    .checkForUpdates()
+    .then((result) => {
+      // With autoDownload: true, the result contains a downloadPromise that
+      // rejects independently if the download fails. The global on('error')
+      // listener already handles download errors via events — this catch
+      // only prevents an unhandled promise rejection from crashing the app.
+      // See: https://github.com/electron-userland/electron-builder/issues/2978
+      result?.downloadPromise?.catch(() => {});
+    })
+    .catch(() => {
+      // Swallow — electron-updater emits an 'error' event AND rejects the
+      // promise for the same failure. The global on('error') handler (below)
+      // handles all error logic; this catch only prevents unhandled rejections.
+    });
 }
 
 export function installUpdate(): void {
