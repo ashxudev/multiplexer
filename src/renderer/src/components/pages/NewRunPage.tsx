@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { ArrowLeft, ChevronRight, Upload } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Loader2, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,7 +54,7 @@ export function NewRunPage() {
     }
   }, [campaign]);
   const [smilesText, setSmilesText] = useState('');
-  const [inputMode, setInputMode] = useState<'paste' | 'csv'>('paste');
+  const [inputMode, setInputMode] = useState<'paste' | 'csv'>('csv');
   const [error, setError] = useState<string | null>(null);
   const [paramsOpen, setParamsOpen] = useState(false);
 
@@ -124,9 +124,9 @@ export function NewRunPage() {
         },
       });
 
-      await utils.campaigns.list.invalidate();
       selectRun(run.id);
       setView('workspace');
+      utils.campaigns.list.invalidate().catch(() => {});
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
@@ -265,6 +265,19 @@ export function NewRunPage() {
             <div className="flex gap-1 rounded-md border border-border p-0.5">
               <button
                 onClick={() => {
+                  setInputMode('csv');
+                  setSmilesText('');
+                }}
+                className={`rounded px-2 py-0.5 text-xs transition-colors outline-none ${
+                  inputMode === 'csv'
+                    ? 'bg-muted text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                CSV
+              </button>
+              <button
+                onClick={() => {
                   setInputMode('paste');
                   setFileCompounds(null);
                   setCsvHeaders(null);
@@ -278,20 +291,7 @@ export function NewRunPage() {
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                Paste
-              </button>
-              <button
-                onClick={() => {
-                  setInputMode('csv');
-                  setSmilesText('');
-                }}
-                className={`rounded px-2 py-0.5 text-xs transition-colors outline-none ${
-                  inputMode === 'csv'
-                    ? 'bg-muted text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                CSV
+                SMILES
               </button>
             </div>
           </div>
@@ -329,11 +329,11 @@ export function NewRunPage() {
                       onClick={handleLoadCsv}
                       disabled={openCsvFile.isPending}
                     >
-                      {openCsvFile.isPending ? 'Uploading…' : 'Upload CSV'}
+                      Upload CSV
                     </Button>
                   </div>
                   {csvFileName && (
-                    <span className="text-xs text-muted-foreground truncate max-w-full">{csvFileName}</span>
+                    <span className="text-xs font-medium text-foreground truncate max-w-full">{csvFileName}</span>
                   )}
                 </div>
               </div>
@@ -366,7 +366,7 @@ export function NewRunPage() {
             onClick={() => setParamsOpen((s) => !s)}
             aria-expanded={paramsOpen}
             aria-controls="advanced-parameters"
-            className="flex items-center gap-1.5 text-sm font-medium hover:text-foreground transition-colors outline-none"
+            className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors outline-none"
           >
             <ChevronRight className={cn("h-3.5 w-3.5 transition-transform", paramsOpen && "rotate-90")} />
             Advanced Parameters
@@ -387,18 +387,17 @@ export function NewRunPage() {
           </div>
         )}
 
-        <div className="flex justify-end">
+        <div className="flex items-center justify-end gap-2">
+          {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
           <Button
             onClick={handleSubmit}
             disabled={!runName.trim() || compounds.length === 0 || hasInvalidSmiles || validationPending || createMutation.isPending}
           >
-            {createMutation.isPending
-              ? 'Submitting...'
-              : validationPending
-                ? 'Validating…'
-                : hasInvalidSmiles
-                  ? `${invalidIndices.size} Invalid SMILES`
-                  : 'Submit'}
+            {validationPending
+              ? 'Validating…'
+              : hasInvalidSmiles
+                ? `${invalidIndices.size} Invalid SMILES`
+                : 'Submit'}
           </Button>
         </div>
       </div>
