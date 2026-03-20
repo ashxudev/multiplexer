@@ -114,7 +114,7 @@ function GeneralSettings() {
             </p>
           </div>
           <Switch
-            checked={telemetry.data?.enabled ?? false}
+            checked={telemetry.data?.enabled ?? true} // Must match backend default in prefs.ts
             disabled={telemetry.isLoading}
             onCheckedChange={(v) => setTelemetry.mutate({ enabled: v })}
           />

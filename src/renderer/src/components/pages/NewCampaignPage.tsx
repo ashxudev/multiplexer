@@ -76,6 +76,7 @@ export function NewCampaignPage() {
   const [description, setDescription] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [sequenceError, setSequenceError] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   // Re-validate when target type changes
   useEffect(() => {
@@ -101,6 +102,7 @@ export function NewCampaignPage() {
     }
 
     setError(null);
+    setIsCreating(true);
     try {
       const campaign = await createMutation.mutateAsync({
         displayName: name.trim(),
@@ -109,11 +111,13 @@ export function NewCampaignPage() {
         description: description.trim() || null,
       });
 
-      await utils.campaigns.list.invalidate();
       selectCampaign(campaign.id);
       toggleCampaignExpanded(campaign.id);
+      await new Promise((r) => setTimeout(r, 600));
       setView('workspace');
+      utils.campaigns.list.invalidate().catch(() => {});
     } catch (e) {
+      setIsCreating(false);
       setError(e instanceof Error ? e.message : String(e));
     }
   };
@@ -212,9 +216,9 @@ export function NewCampaignPage() {
         <div className="flex justify-end">
           <Button
             onClick={handleCreate}
-            disabled={!name.trim() || !sequence.trim() || !!sequenceError || createMutation.isPending}
+            disabled={!name.trim() || !sequence.trim() || !!sequenceError || isCreating}
           >
-            {createMutation.isPending ? 'Creating...' : 'Create'}
+            Create
           </Button>
         </div>
       </div>
